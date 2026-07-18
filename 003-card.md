@@ -1,0 +1,6 @@
+Scenario: Structured Data Extraction You are building a structured data extraction system using Claude. The system extracts information from unstructured documents, validates output using JSON schemas, and maintains high accuracy. It must handle edge cases gracefully and integrate with downstream systems. Your extraction QA pass produces JSON records that validate successfully, but reviewers report the findings are hard to act on. Some records describe vague problems like "date issue," others omit where the problem appears, and suggested fixes vary between full sentences, fragments and empty strings. The downstream ticketing system accepts the records, but reviewers spend significant time interpreting them. What change would most effectively improve consistency?
+---
+[ ] A - Make every finding field non-null in the schema so validation fails whenever Claude leaves any reviewer detail empty.
+[ ] B - Add a general instruction requiring concise, high-confidence findings and asking Claude to avoid vague or incomplete reviewer notes.
+[ ] C - Add targeted examples showing complete actionable findings with document location, affected field, issue description, severity, and suggested correction.
+[ ] D - Post-process each finding with regular expressions to infer missing locations, severities, and suggested fixes from the text.

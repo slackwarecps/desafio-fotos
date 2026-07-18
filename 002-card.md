@@ -1,0 +1,6 @@
+Scenario: Structured Data Extraction You are building a structured data extraction system using Claude. The system extracts information from unstructured documents, validates output using JSON schemas, and maintains high accuracy. It must handle edge cases gracefully and integrate with downstream systems. Your extraction pipeline includes a QA pass that flags possible mistakes in supplier contract records before they enter the downstream procurement system. Over the last month, procurement analysts accepted many findings about missing renewal clauses but overturned most findings involving informal pricing language. Current logs store only document ID, field name, confidence, and finding text, making it difficult to prioritize prompt and validator improvements. What change should you make first?
+---
+[ ] A - Increase the QA confidence threshold globally, suppressing all lower-confidence findings before analysts review extracted contract records.
+[ ] B - Add a structured detected_pattern field to each QA finding, then analyze acceptance rates by pattern and document type.
+[ ] C - Add a system prompt instruction telling Claude to report only findings that procurement analysts would likely accept.
+[ ] D - Store only analyst accept or reject decisions per document, then randomly sample overturned findings for manual discussion.
