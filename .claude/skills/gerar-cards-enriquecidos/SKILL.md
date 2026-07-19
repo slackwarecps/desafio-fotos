@@ -24,6 +24,7 @@ Automatiza o processo completo de criação de flashcards enriquecidos a partir 
    - Lê cada foto e extrai:
      - Pergunta original (em inglês)
      - 4 opções de resposta (A, B, C, D)
+   - **Analisa automaticamente** a pergunta e determina a resposta correta
 
 3. **Gerar Card Simples** (`NNN-card.md`)
    ```

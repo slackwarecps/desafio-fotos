@@ -1,88 +1,63 @@
-Scenario: Structured Data Extraction You are building a structured data extraction system using Claude. The system extracts information from unstructured documents, validates output using JSON schemas, and maintains high accuracy. It must handle edge cases gracefully and integrate with downstream systems. Your extraction QA pass produces JSON records that validate successfully, but reviewers report the findings are hard to act on. Some records describe vague problems like "date issue," others omit where the problem appears, and suggested fixes vary between full sentences, fragments and empty strings. The downstream ticketing system accepts the records, but reviewers spend significant time interpreting them. What change would most effectively improve consistency?
+Scenario: Structured Data Extraction You are building a structured data extraction system using Claude. The system extracts information from unstructured documents, validates output using JSON schemas, and maintains high accuracy. It must handle edge cases gracefully and integrate with downstream systems. Your extraction QA pass produces JSON records that validate successfully, but reviewers report the findings are hard to act on. Some records describe vague problems like "date issue," others omit where the problem appears, and suggested fixes vary between full sentences, fragments, and empty strings. The downstream ticketing system accepts the records, but reviewers spend significant time interpreting them. What change would most effectively improve consistency?
 ---
-[ ] A - Make every finding field non-null in the schema so validation fails whenever Claude leaves any reviewer detail empty.
+[ ] A - Make every finding field non-null in the schema so validation fails whenever Claude leaves any detail empty.
 [ ] B - Add a general instruction requiring concise, high-confidence findings and asking Claude to avoid vague or incomplete reviewer notes.
 [ ] C - Add targeted examples showing complete actionable findings with document location, affected field, issue description, severity, and suggested correction.
 [ ] D - Post-process each finding with regular expressions to infer missing locations, severities, and suggested fixes from the text.
 ---
 ### TRANSLATED QUESTION
-Você está construindo um sistema de extração de dados estruturados usando Claude. O sistema extrai informações de documentos não estruturados, valida a saída usando esquemas JSON e mantém alta precisão. Deve lidar com casos extremos de forma graciosa e integrar-se com sistemas downstream. Seu QA pass de extração produz registros JSON que validam com sucesso, mas reviewers relatam que os findings são difíceis de agir. Alguns registros descrevem problemas vagos como "date issue," outros omitem onde o problema aparece, e sugestões de fix variam entre sentenças completas, fragmentos e strings vazios. O sistema de ticketing downstream aceita os registros, mas reviewers gastam tempo significativo interpretando-os. Qual mudança melhor melhoraria a consistência?
+Você está construindo um sistema de extração de dados estruturados usando Claude. O sistema extrai informações de documentos não estruturados, valida a saída usando esquemas JSON e mantém alta precisão. Deve lidar com casos extremos de forma graciosa e integrar-se com sistemas downstream. Sua passagem de QA de extração produz registros JSON que validam com sucesso, mas os revisores reportam que os findings são difíceis de usar. Alguns registros descrevem problemas vagos como "problema de data," outros omitem onde o problema aparece, e as correções sugeridas variam entre frases completas, fragmentos e strings vazias. O sistema de ticketing downstream aceita os registros, mas os revisores gastam tempo significativo interpretando-os. Qual mudança melhoraria a consistência de forma mais eficaz?
 
 Alternativas traduzidas:
 
-A) Fazer cada campo de finding non-null no schema para que a validação falhe sempre que Claude deixa algum detalhe de reviewer vazio.
-B) Adicionar uma instrução geral requerendo findings concisos e alta confiança, pedindo a Claude para evitar reviewer notes vagas ou incompletas.
-C) Adicionar exemplos direcionados mostrando findings completos e acionáveis com localização em documento, campo afetado, descrição do problema, severidade e correção sugerida.
-D) Pós-processar cada finding com expressões regulares para inferir localizações, severidades e fixes sugeridos a partir do texto.
+A) Tornar todo campo de finding não-nulo no schema para que a validação falhe sempre que Claude deixar qualquer detalhe vazio.
+B) Adicionar uma instrução geral exigindo findings concisos e de alta confiança, pedindo para Claude evitar notas vagas ou incompletas.
+C) Adicionar exemplos direcionados mostrando findings acionáveis completos com localização no documento, campo afetado, descrição do problema, severidade e correção sugerida.
+D) Pós-processar cada finding com expressões regulares para inferir localizações, severidades e correções sugeridas ausentes a partir do texto.
 
 ---
 ### EXPLANATION (TECH LEAD)
-Explicação Técnica:
 
-Esta pergunta testa um padrão crítico em prompt engineering com LLMs: **exemplos concretos (few-shot prompting) superam instruções genéricas em múltiplas ordens de magnitude**. O cenário descreve um problema clássico — o modelo produz JSON válido (schema passa), mas conteúdo semântico dentro dos campos é inconsistente e de baixa qualidade (vagueza, omissões, variação).
+Esta pergunta testa o conceito de **few-shot prompting vs. instruções abstratas** em sistemas de extração com LLMs. O problema é claro: as saídas são estruturalmente válidas (passam no JSON schema) mas semanticamente inconsistentes — falta um padrão compartilhado de como um "finding acionável" deve ser.
 
-A raiz do problema é falta de definição clara de "padrão esperado". Instruções genéricas como "seja conciso" ou "evite vagueza" são abstratas — o modelo as reinterpreta a cada execução. Mas exemplos concretos ("aqui está um finding bem-formado com localização específica, descrição clara, severidade quantificada, sugestão testável") estabelecem um padrão que o modelo consegue imitar consistentemente.
+A validação de schema garante tipo e presença de campos, mas não garante **qualidade semântica** do conteúdo. O problema não é o que está sendo gerado, mas como está sendo gerado — falta um **template mental** consistente para o modelo seguir.
 
 Por que a alternativa C é a correta:
 
-A alternativa C usa **few-shot prompting** — a forma mais robusta de moldar comportamento de LLM. Em vez de confiar em linguagem natural abstrata ("seja conciso", "evite vagueza"), você mostra exemplos reais: "Aqui está um finding bem-formado: document='contract_123.pdf', field='expiration_date', issue='Missing expiration date in contract header', severity='high', suggestion='Insert date from contract cover page'."
-
-Com exemplos, o modelo recebe um padrão concreto e legível que consegue replicar. Isso é mais eficaz porque:
-- Exemplos são semântica clara, não interpretação linguística
-- Padrão é visível e reutilizável
-- Modelo consegue aprender por imitação
+**Few-shot examples são a técnica mais eficaz para shapear output quality.** Em vez de dizer abstratamente "seja consistente" (B) ou forçar campos não-nulos (A), você mostra **exemplos concretos** do que considera um finding bem formado. Isso estabelece um padrão implícito de formato, tom, nível de detalhe e estrutura que o modelo pode imitar. É a abordagem mais robusta porque ataca a causa raiz: falta de um template de referência.
 
 Por que as outras estão erradas:
 
-**A) Schema com non-null**: Força estrutura, mas não força **qualidade de conteúdo**. Validação passa com "date issue" (vago mas não-null). Você tem JSON válido mas findings ainda inúteis. Schema resolution opera em tipos; não resolve semântica.
+**A)** Tornar campos não-nulos é uma abordagem puramente técnica que não resolve o problema semântico. O modelo pode preencher "location: somewhere" e "severity: medium" — válido, mas ainda inútil. Você força presença, não qualidade.
 
-**B) Instruções genéricas**: Tenta comunicar expectativas via linguagem natural. Problema: "conciso" e "vago" são subjetivos. Diferentes execuções do modelo interpretam diferentemente. Sem exemplos, o modelo fica adivinhando o que você quer.
+**B)** Instruções abstratas são fracas para controle de formato. "Seja consistente" ou "evite notas vagas" são subjetivos — o modelo não tem uma definição operacional do que isso significa em termos de saída esperada.
 
-**D) Post-processing com regex**: É frágil. Você não consegue inferir confiável "localização no documento" de texto livre usando regex — existem infinitas formas de descrever localização. Além disso, não resolve o problema real: modelo gerando output de baixa qualidade desde o início.
+**D)** Pós-processamento com regex é frágil e reativo. Você está tentando adivinhar o que o modelo quis dizer em vez de fazê-lo gerar corretamente desde o início. Além disso, inferir "severidade" ou "correção sugerida" de texto livre com regex é propenso a erros.
 
-Dica importante:
-
-Em prompt engineering com LLMs, **exemplos > instruções genéricas** sempre. Quando precisa de output estruturado e consistente, mostre 2-3 exemplos de "exatamente o que eu quero" (com estrutura, tom, nível de detalhe). Isso treina muito melhor do que dizer "seja conciso" ou "seja claro".
+Dica importante: **Schemas de validação garantem estrutura; exemplos (few-shot) garantem qualidade semântica.** Em sistemas de extração, invista em exemplos cuidadosamente curados antes de tentar soluções de pós-processamento. É mais efetivo ensinar o modelo a fazer certo na primeira vez do que consertar depois.
 
 ---
 ### SIMPLE EXPLANATION
-Explicação para Aprendizes:
 
 O que está acontecendo:
 
-Você pediu ao Claude para gerar avisos sobre problemas em documentos. O JSON é válido (estrutura OK), mas o conteúdo é inconsistente. Às vezes ele diz "date issue" (vago), às vezes omite o local do problema, às vezes escreve a sugestão de forma diferente. Reviewers gastam tempo interpretando.
-
-A pergunta: como fazer o Claude gerar avisos **consistentes e acionáveis**?
+O sistema gera relatórios sobre problemas em documentos. Os relatórios têm a estrutura certa (passam na validação), mas o conteúdo é bagunçado: uns dizem "problema de data" sem explicar qual data, outros dão sugestões incompletas. Os revisores perdem tempo tentando entender o que cada relatório quer dizer.
 
 Por que a alternativa C é a melhor:
 
-C diz: "Mostre exemplos de avisos bem-feitos ao Claude antes de pedir que gere novos."
-
-Um exemplo bem-feito seria:
-```
-documento: "contract.pdf"
-campo: "expiration_date"
-problema: "Data de expiração está vazia no cabeçalho"
-severidade: "alto"
-sugestão: "Adicione a data da página de capa do contrato"
-```
-
-Ao ver esse exemplo, Claude entende o padrão e repete em avisos novos.
+C diz: "Mostre exemplos prontos de como um bom relatório deve ser." É como dar um modelo de redação pronto — o aluno (Claude) copia o formato, o nível de detalhe e a estrutura. Muito mais efetivo que apenas dizer "seja mais claro".
 
 Por que as outras não funcionam:
 
-**A) Validação no schema**: Força estrutura, mas não força qualidade. "Date issue" não é nula, então passa. Ainda vago.
+**A)** Forçar campos obrigatórios — o modelo preenche qualquer coisa para não falhar, mas continua sendo conteúdo ruim.
 
-**B) Instruções genéricas**: "Seja conciso" é subjetivo. Claude interpreta diferente cada vez. Sem exemplo concreto, ele fica adivinhando.
+**B)** Pedir para "evitar notas vagas" — subjetivo. O modelo não sabe exatamente o que é "vago" para você.
 
-**D) Regex para inferir**: Você tenta adivinhar informação a partir do texto. Frágil e não resolve — o problema é Claude gerar pobremente desde o início.
+**D)** Usar regex para adivinhar informações faltando — frágil e não resolve a inconsistência na origem.
 
-Lembrar:
-
-**Exemplos funcionam melhor que instruções:**
-
-Em vez de "write clear fields", mostre um exemplo de "campo claro bem feito". Claude aprende pelo exemplo melhor que por instrução.
+Lembrar: **Quer saída consistente? Dê exemplos consistentes.** Modelos aprendem mais vendo do que ouvindo instruções.
 
 ---
 ### CORRECT ANSWER
+
 Alternativa Correta: C

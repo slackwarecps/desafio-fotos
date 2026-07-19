@@ -60,14 +60,8 @@ Scenario: [Cenário/Contexto]
 [ ] D - [Opção D]
 ```
 
-#### Passo 4: Perguntar a Resposta Correta
-Pergunte ao Fabão interativamente:
-```
-📸 Foto 001: "You are building a multi-agent research system..."
-Qual é a resposta correta? (A/B/C/D): 
-```
-
-Aguarde a resposta (A, B, C ou D).
+#### Passo 4: Analisar e Determinar a Resposta Correta
+Analise a pergunta e as opções para determinar automaticamente qual é a resposta correta com base no conhecimento técnico/arquitetural.
 
 #### Passo 5: Criar Card Enriquecido
 Crie o arquivo `001-enriched-card.md` com a estrutura completa:
@@ -222,7 +216,7 @@ Esses exemplos mostram o tom, estrutura e profundidade esperados.
   - [ ] Ler a imagem
   - [ ] Extrair pergunta + 4 opções
   - [ ] Criar `NNN-card.md`
-  - [ ] Perguntar resposta correta ao Fabão
+  - [ ] Analisar automaticamente e determinar resposta correta
   - [ ] Traduzir conteúdo para português
   - [ ] Gerar explicação técnica (por que correta, por que erradas)
   - [ ] Criar `NNN-enriched-card.md`

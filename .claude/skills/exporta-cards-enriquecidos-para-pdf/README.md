@@ -159,39 +159,42 @@ Alternativa Correta: [X]
 
 Quando o usuário chamar `/exporta-cards-enriquecidos-para-pdf`:
 
-1. **Fase 1: Detectar**
+1. **Fase 1: Detectar Cards**
    - Use Bash para encontrar todos os `*-enriched-card.md`
-   - Informe quantos foram encontrados
+   - Ordene numericamente (001, 002, 003...)
+   - Informe quantidade total
 
-2. **Fase 2: Extrair**
-   - Use Read para ler cada card
-   - Extraia as seções em ordem: pergunta, tradução, explicações, resposta
-   - Mantenha formatação original
+2. **Fase 2: Criar Script Python de Consolidação**
+   - Crie script que:
+     - Detecta todos os cards
+     - Lê conteúdo de cada um
+     - Extrai seções: TRANSLATED QUESTION, EXPLANATION (TECH LEAD), SIMPLE EXPLANATION, CORRECT ANSWER
+     - Usa `---` como separador de página (pandoc reconhece como quebra)
+     - Estrutura: Questão → `---` → Resposta → `---`
 
-3. **Fase 3: Consolidar**
-   - Crie documento Markdown único
-   - Siga padrão de formatação acima
-   - Adicione números de página e contadores (Question X/Y)
+3. **Fase 3: Gerar Markdown Consolidado**
+   - Formato com quebras de página via `---`:
+     - Capa (pag 1)
+     - Question 1 (pag 2)
+     - `---` (quebra de página)
+     - Question 1 Answer (pag 3)
+     - `---` (quebra de página)
+     - Question 2 (pag 4)
+     - ... repetir para todas questões
+   - Salvar em: `outputs/flashcards-deck-YYYY-MM-DD.md`
 
-4. **Fase 4: Converter para PDF com Pandoc**
-   - Execute comando pandoc para converter `.md` → `.pdf`
-   - Comando:
-     ```bash
-     pandoc flashcards-deck-YYYY-MM-DD.md \
-       -o flashcards-deck-YYYY-MM-DD.pdf \
-       --from markdown \
-       --to pdf
-     ```
-   - Mantenha o arquivo `.md` raw (não delete)
-   - Ambos os arquivos (`.md` e `.pdf`) são gerados
+4. **Fase 4: Converter para PDF com Quebras Respeitadas**
+   - Converter Markdown → HTML com pandoc
+   - Substituir `<hr>` por `<div style="page-break-after: always;"></div>`
+   - Converter HTML → PDF com weasyprint (respeita page-break)
+   - Resultado: `outputs/flashcards-deck-YYYY-MM-DD.pdf`
 
-5. **Fase 5: Resumo**
-   - Informe nome dos arquivos gerados:
-     - `.md` (raw, editável)
-     - `.pdf` (formatado, pronto para compartilhar)
-   - Quantidade de questões
-   - Número de páginas
-   - Sucesso!
+5. **Fase 5: Resumo Final**
+   - Informe:
+     - ✅ Cards processados: X
+     - ✅ Markdown: flashcards-deck-YYYY-MM-DD.md
+     - ✅ PDF: flashcards-deck-YYYY-MM-DD.pdf (quebras respeitadas)
+     - ✅ Páginas: 1 (capa) + 2×X (questão+resposta) = 1+2X páginas
 
 ## Tratamento de Erros
 

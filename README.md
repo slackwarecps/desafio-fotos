@@ -158,6 +158,13 @@ Exporta todos os cards enriquecidos para um único PDF.
 - Gera `flashcards-deck-[DATA].pdf`
 - Pronto para estudar ou compartilhar
 
+### 3. `/exporta-cards-enriquecidos-para-epub`
+Exporta todos os cards enriquecidos para o formato EPUB de e-book (compatível com Google Play Books).
+- Consolida todos os `NNN-enriched-card.md` em XHTMLs estruturados
+- Otimiza tipografia e estilos para visualização em celulares
+- Gera `flashcards-deck-[DATA].epub`
+- Executável através do script [scripts/exporta_epub.py](file:///Users/fabioalvaropereira/Desktop/desafio-fotos/scripts/exporta_epub.py)
+
 ## Próximas Fases
 
 - [ ] Integrar com app SRS externo (Anki, Quizlet)

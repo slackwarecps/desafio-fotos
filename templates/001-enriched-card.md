@@ -45,6 +45,7 @@ Dica importante: Esse padrão aparece bastante em sistemas multi-agente com Clau
 
 ### CORRECT ANSWER
 
-Alternativa Correta: B
+[ ] B - Replace fetch_url with a load_document tool that accepts catalog document IDs or approved URLs and validates before fetching.
+
 
 

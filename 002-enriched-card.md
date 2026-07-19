@@ -17,65 +17,47 @@ D) Armazenar apenas decisões de aceitar/rejeitar dos analistas por documento, d
 
 ---
 ### EXPLANATION (TECH LEAD)
-Explicação Técnica:
 
-Esta pergunta testa um padrão crítico em observabilidade de sistemas ML: **estruture dados para análise antes de tentar otimizar**. O cenário descreve um problema bem específico — há um padrão claro em feedback (aceitam renovação, rejeitam preço informal) — mas o sistema é cego porque os dados não estão estruturados para detectar e analisar esse padrão.
+Esta pergunta testa um conceito fundamental em ML systems e data pipelines: **você não pode melhorar o que não consegue medir**. O cenário apresenta um problema bem específico — há um padrão consistente no feedback dos analistas (aceitam findings sobre renovação, rejeitam sobre preço informal) — mas o sistema não tem informações estruturadas para **entender por que** esse padrão existe.
 
-O conceito fundamental é **"You can't improve what you can't measure"**. Logs atuais têm sinais brutos (confidence score, texto), mas não categorização semântica. Sem categorização, é impossível: (1) detectar padrões de variação, (2) medir taxa de sucesso por tipo, (3) priorizar melhorias de forma baseada em dados.
+A raiz do problema é a falta de visibilidade analítica. Os logs atuais armazenam dados brutos (confidence score, texto do finding), mas não capturam **que tipo de finding** é cada um. Sem categorização, é impossível detectar padrões, medir taxa de aceite por padrão, ou direcionar melhorias específicas.
 
 Por que a alternativa B é a correta:
 
-A alternativa B introduz **estrutura de dados** via campo `detected_pattern` (ex: "missing_clause", "informal_pricing", "date_mismatch"). Com isso, você consegue fazer análise real:
-- Segmentar: "Qual taxa de aceitação para 'missing_clause' vs. 'informal_pricing'?"
-- Descobrir: "Ah, 'informal_pricing' tem 15% aceitação enquanto 'missing_clause' tem 95%"
-- Priorizar: "Vou otimizar a heurística para 'informal_pricing' porque é o problema real"
-
-Isso transforma dados brutos em sinais acionáveis que guiam otimização sistemática.
+Adiciona um campo `detected_pattern` (ex: "missing_clause", "informal_pricing") a cada finding, permitindo análise real. Com isso, você descobre que "informal_pricing" tem baixa taxa de aceite e pode otimizar especificamente esse padrão — seja ajustando o prompt ou o validator. É a abordagem data-driven: estrutura os dados primeiro, depois toma decisões.
 
 Por que as outras estão erradas:
 
-**A) Aumentar threshold globalmente**: É uma solução cega. Você suprime falsos positivos mas também falsos negativos válidos. Além disso, não resolve o padrão — se "informal_pricing" é intrinsecamente subjetivo, aumentar threshold global não ajuda; você precisa entender POR QUÊ e talvez aceitar baixa confiança apenas para esse padrão.
+**A)** Aumentar threshold globalmente é cego e indiscriminado — você suprime findings válidos junto com falsos positivos. Pior: se "informal_pricing" tem baixa confiança mas "missing_clause" tem alta, aumentar o threshold global pode matar findings úteis só porque um padrão é problemático.
 
-**C) Adicionar instrução de prompt**: Tenta usar prompt engineering para resolver um problema de dados/arquitetura. O modelo pode prever o que analistas querem, mas sem feedback estruturado e métricas, você não consegue validar. Além disso, diferentes padrões têm diferentes aceitabilidades — uma instrução global é inflexível.
+**C)** Confiar em instrução de prompt para filtrar é frágil — sem feedback estruturado, você não consegue validar se o filtro está funcionando, e o modelo pode subjetivamente decidir o que "analysts would likely accept".
 
-**D) Guardar decisões e amostrar**: É útil para auditoria retrospectiva, mas não resolve o problema AGORA. Você continua cego em relação a padrões. Sampling aleatório de rejeitados não identifica sistematicamente por que determinados padrões falham.
+**D)** Armazenar decisões é útil para auditoria, mas isoladamente não ajuda a entender padrões. Amostragem aleatória de findings rejeitados é ineficiente e não escala.
 
-Dica importante:
-
-Em sistemas com feedback humano, **estruture dados para segmentação ANTES de otimizar**. Capture não apenas "resultado", mas "categoria de resultado" (padrão, tipo, contexto). Isso permite análise segmentada que revela os verdadeiros problemas em vez de sintomas genéricos.
+Dica importante: **Sempre estruture dados de feedback do sistema antes de tentar otimizar.** A falta de dados categorizados é um anti-pattern comum — leads gastam tempo tentando melhorar cegamente em vez de primeiro entender onde estão os problemas reais. "Instrumentação primeiro, otimização depois."
 
 ---
 ### SIMPLE EXPLANATION
-Explicação para Aprendizes:
 
 O que está acontecendo:
 
-Você tem um sistema que gera avisos sobre documentos. Alguns avisos as pessoas aceitam (renovação ausente), outros rejeitam (preço informal). Mas seus logs não dizem que tipo de aviso é cada um — só dizem "confidence score X, texto Y". Você não consegue entender por quê alguns são aceitos e outros não.
+Você tem um sistema que gera avisos sobre documentos. Alguns avisos as pessoas aceitam (cláusula de renovação ausente), outros rejeitam (preço informal). Mas você não consegue entender por quê — seus logs só guardam o texto do aviso, não dizem que tipo de aviso é cada um.
 
 Por que a alternativa B é a melhor:
 
-B diz: "Adicione um campo que categorize qual tipo de aviso é cada um, depois analise quais tipos as pessoas aceitam."
-
-Assim você descobre:
-- "Tipo 'missing_clause': 95% aceito"
-- "Tipo 'informal_pricing': 15% aceito"
-
-Com essa informação, você sabe exatamente o que melhorar.
+B diz: "Adicione um campo que diga qual tipo de aviso é cada um, depois analise quais tipos as pessoas aceitam." Assim você descobre: "Ah, tipo 'preço informal' tem baixa aceitação — preciso melhorar isso." É como um médico que primeiro diagnostica antes de tratar.
 
 Por que as outras não funcionam:
 
-**A) Aumentar filtro global**: Você perde avisos que seriam úteis. Não resolve porque o problema não é "confiança", é "informal_pricing é confuso".
+**A)** Aumentar o filtro geral — você joga fora avisos bons junto com os ruins.
 
-**C) Instruir o sistema**: Você tenta fazer o sistema "adivinhar" o que as pessoas querem. Mas sem dados estruturados, você não consegue validar se funciona.
+**C)** Pedir para o sistema adivinhar o que as pessoas vão aceitar — você nunca sabe se ele está acertando ou errando.
 
-**D) Guardar decisões e amostrar**: Você ainda não sabe o padrão. "Alguém rejeitou isso" não é suficiente — você precisa saber "tipo X é rejeitado porque...".
+**D)** Só guardar se aceitaram ou rejeitaram — você ainda não sabe por quê rejeitaram.
 
-Lembrar:
-
-**Para melhorar, precisa medir. Para medir, precisa categorizar:**
-
-Em vez de "aviso rejeitado", tenha "tipo 'informal_pricing' rejeitado 85% do tempo". Isso é informação acionável.
+Lembrar: **Antes de consertar um problema, primeiro entenda qual é o problema.** Categorize os dados para enxergar padrões.
 
 ---
 ### CORRECT ANSWER
+
 Alternativa Correta: B
