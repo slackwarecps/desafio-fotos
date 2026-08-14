@@ -5,31 +5,31 @@ Sistema para criar flashcards educacionais enriquecidos a partir de fotos, estru
 ## Workflow
 
 ### Fase 1: Preparação de Fotos
-Coloque as novas fotos (screenshots) no diretório raiz, em qualquer formato:
-- `Screenshot 2026-07-18 at 08.46.16.png`
-- `Captura de Tela...png`
+Coloque as novas fotos (screenshots) no diretório `cards/`, em qualquer formato:
+- `cards/Screenshot 2026-07-18 at 08.46.16.png`
+- `cards/Captura de Tela...png`
 - Qualquer arquivo `.png` ou `.jpg`
 
-A skill cuidará da renomeação automaticamente.
+A skill cuidará da renomeação para `foto-NNN.png` dentro da pasta `cards/` automaticamente.
 
 ### Fase 2: Gerar Cards Enriquecidos
-Use a skill `/gerar-cards-enriquecidos` para automatizar todo o processo:
+Use a skill `/gerar-cards-enriquecidos` ou execute o script canônico para automatizar todo o processo:
 
 ```bash
-/gerar-cards-enriquecidos
+python3 scripts/gerar_cards.py
 ```
 
-#### O que a skill faz:
+#### O que a skill/script faz:
 
-1. **Detecta fotos**: Encontra todas as fotos `foto-NNN.png`
+1. **Detecta fotos**: Encontra todas as fotos na pasta `cards/`
 2. **Extrai conteúdo**: Lê cada foto e identifica:
    - Pergunta/Cenário
    - Opções de resposta (A, B, C, D)
-3. **Cria card simples**: Arquivo `NNN-card.md` com:
+3. **Cria card simples**: Arquivo `outputs/cards-enriquecidos/NNN-card.md` com:
    - Pergunta original (inglês)
    - Separador ---
    - 4 opções de resposta
-4. **Enriquece card**: Arquivo `NNN-enriched-card.md` com:
+4. **Enriquece card**: Arquivo `outputs/cards-enriquecidos/NNN-enriched-card.md` com:
    - Pergunta original em inglês
    - Tradução completa para português
    - Explicação técnica detalhada:
@@ -43,17 +43,17 @@ Use a skill `/gerar-cards-enriquecidos` para automatizar todo o processo:
 
 ```
 desafio-fotos/
-├── foto-001.png              # Foto original capturada
-├── foto-002.png
-├── foto-003.png
+├── cards/
+│   ├── foto-001.png              # Foto original capturada
+│   ├── foto-002.png
+│   └── foto-003.png
 │
-├── 001-card.md               # Card simples (básico)
-├── 002-card.md
-├── 003-card.md
-│
-├── 001-enriched-card.md      # Card enriquecido (com tradução + explicação)
-├── 002-enriched-card.md
-├── 003-enriched-card.md
+├── outputs/
+│   └── cards-enriquecidos/
+│       ├── 001-card.md           # Card simples (básico)
+│       ├── 001-enriched-card.md  # Card enriquecido (com tradução + explicação)
+│       ├── 002-card.md
+│       └── 002-enriched-card.md
 │
 ├── templates/                # Templates de referência
 │   ├── 001-card.md
@@ -116,13 +116,13 @@ Alternativa Correta: [A/B/C/D]
 ## Fluxo Completo para Novas Perguntas
 
 1. **Capture as fotos** de novas perguntas
-2. **Coloque no diretório** raiz do projeto
-3. **Execute**: `/gerar-cards-enriquecidos`
-4. **Para cada foto**, o Claude vai:
+2. **Coloque na pasta** `cards/`
+3. **Execute**: `/gerar-cards-enriquecidos` ou o script python `python3 scripts/gerar_cards.py`
+4. **Para cada foto**, o sistema vai:
    - Extrair a pergunta e opções
-   - Criar o card simples
-   - Perguntar qual é a resposta correta
-   - Criar o card enriquecido com tradução e explicação
+   - Criar o card simples em `outputs/cards-enriquecidos/NNN-card.md`
+   - Validar gabarito com duas passadas
+   - Criar o card enriquecido em `outputs/cards-enriquecidos/NNN-enriched-card.md` com tradução e explicação
 
 ## Uso em Apps SRS
 
@@ -144,25 +144,25 @@ Veja os cards de exemplo já criados:
 
 ## Skills Disponíveis
 
-### 1. `/gerar-cards-enriquecidos`
-Gera cards simples e enriquecidos a partir de fotos automaticamente.
-- Detecta fotos com qualquer nome
-- Renomeia para `foto-001.png`, `foto-002.png`, etc.
-- Cria `NNN-card.md` (simples)
-- Cria `NNN-enriched-card.md` (com 2 níveis de explicação)
+### 1. `/gerar-cards-enriquecidos` (Ou `python3 scripts/gerar_cards.py`)
+Gera cards simples e enriquecidos a partir de fotos na pasta `cards/` automaticamente.
+- Detecta fotos com qualquer nome em `cards/`
+- Renomeia para `cards/foto-001.png`, `cards/foto-002.png`, etc.
+- Cria `outputs/cards-enriquecidos/NNN-card.md` (simples)
+- Cria `outputs/cards-enriquecidos/NNN-enriched-card.md` (com 2 níveis de explicação)
 
 ### 2. `/exporta-cards-enriquecidos-para-pdf`
 Exporta todos os cards enriquecidos para um único PDF.
-- Consolida todos os `NNN-enriched-card.md`
+- Consolida todos os `outputs/cards-enriquecidos/*-enriched-card.md`
 - Formata como deck didático
-- Gera `flashcards-deck-[DATA].pdf`
+- Gera `outputs/flashcards-deck-[DATA].pdf`
 - Pronto para estudar ou compartilhar
 
 ### 3. `/exporta-cards-enriquecidos-para-epub`
 Exporta todos os cards enriquecidos para o formato EPUB de e-book (compatível com Google Play Books).
-- Consolida todos os `NNN-enriched-card.md` em XHTMLs estruturados
+- Consolida todos os `outputs/cards-enriquecidos/*-enriched-card.md` em XHTMLs estruturados
 - Otimiza tipografia e estilos para visualização em celulares
-- Gera `flashcards-deck-[DATA].epub`
+- Gera `outputs/flashcards-deck-[DATA].epub`
 - Executável através do script [scripts/exporta_epub.py](file:///Users/fabioalvaropereira/Desktop/desafio-fotos/scripts/exporta_epub.py)
 
 ## Próximas Fases

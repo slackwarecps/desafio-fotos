@@ -1,8 +1,8 @@
-Scenario: Multi-Agent Research System You are building a multi-agent research system using the Claude Agent SDK. A coordinator agent delegates to specialized subagents: one searches the web, one analyzes documents, one synthesizes findings, and one generates reports. The system researches topics and produces comprehensive, cited reports. During testing, the document analysis subagent receives coordinator-selected PDFs and reports from an approved catalog, but it has a generic URL retrieval tool. It sometimes follows links inside documents to blogs, login pages, or duplicate HTML summaries, then cites those pages instead of the approved sources. You need to reduce these citation and scope errors while preserving access to approved source material. What change best addresses this?
+Scenario: Developer Productivity with Claude You are building developer productivity tools using the Claude Agent SDK. The agent helps engineers explore unfamiliar codebases, understand legacy systems, generate boilerplate code, and automate repetitive tasks. It uses built-in tools (Read, Write, Bash, Edit) with MCP servers. A team wants to add a "cancel renewal" workflow to a legacy subscription service. The initial implementation point is unclear because cancellation behavior appears split across command-line scripts, web handlers, and scheduled jobs. In earlier similar tasks, immediate edits repeatedly targeted the wrong abstraction and had to be rolled back after tests exposed broken shared behavior. Which workflow should the tool recommend first?
 
 ---
 
-[ ] A - Allow fetch_url for any link, then have synthesis discard citations whose domains are not in the approved catalog.
-[ ] B - Replace fetch_url with a load_document tool that accepts catalog document IDs or approved URLs and validates before fetching.
-[ ] C - Keep fetch_url available, but add prompt instructions warning the subagent never to open links found inside documents.
-[ ] D - Give the document analysis subagent web search tools too, so it can independently confirm whether linked pages are relevant.
+[ ] A - Instruct Claude to read every repository file first, then implement changes in the same extended session.
+[ ] B - Proceed with direct execution, relying on test failures to reveal hidden dependencies and guide successive corrective edits.
+[ ] C - Start separate direct-execution sessions for each suspected module, then manually combine the resulting edits later.
+[ ] D - Use plan mode to map relevant flows and compare implementation points before allowing file modifications.

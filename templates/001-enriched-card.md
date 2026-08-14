@@ -1,46 +1,57 @@
-Scenario: Multi-Agent Research System You are building a multi-agent research system using the Claude Agent SDK. A coordinator agent delegates to specialized subagents: one searches the web, one analyzes documents, one synthesizes findings, and one generates reports. The system researches topics and produces comprehensive, cited reports. During testing, the document analysis subagent receives coordinator-selected PDFs and reports from an approved catalog, but it has a generic URL retrieval tool. It sometimes follows links inside documents to blogs, login pages, or duplicate HTML summaries, then cites those pages instead of the approved sources. You need to reduce these citation and scope errors while preserving access to approved source material. What change best addresses this?
+Scenario: Developer Productivity with Claude You are building developer productivity tools using the Claude Agent SDK. The agent helps engineers explore unfamiliar codebases, understand legacy systems, generate boilerplate code, and automate repetitive tasks. It uses built-in tools (Read, Write, Bash, Edit) with MCP servers. A team wants to add a "cancel renewal" workflow to a legacy subscription service. The initial implementation point is unclear because cancellation behavior appears split across command-line scripts, web handlers, and scheduled jobs. In earlier similar tasks, immediate edits repeatedly targeted the wrong abstraction and had to be rolled back after tests exposed broken shared behavior. Which workflow should the tool recommend first?
 
 ---
 
-[ ] A - Allow fetch_url for any link, then have synthesis discard citations whose domains are not in the approved catalog.
-[ ] B - Replace fetch_url with a load_document tool that accepts catalog document IDs or approved URLs and validates before fetching.
-[ ] C - Keep fetch_url available, but add prompt instructions warning the subagent never to open links found inside documents.
-[ ] D - Give the document analysis subagent web search tools too, so it can independently confirm whether linked pages are relevant.
+[ ] A - Instruct Claude to read every repository file first, then implement changes in the same extended session.
+[ ] B - Proceed with direct execution, relying on test failures to reveal hidden dependencies and guide successive corrective edits.
+[ ] C - Start separate direct-execution sessions for each suspected module, then manually combine the resulting edits later.
+[ ] D - Use plan mode to map relevant flows and compare implementation points before allowing file modifications.
 
 ---
 
 ### TRANSLATED QUESTION
-Você está construindo um sistema de pesquisa multi-agente usando o Claude Agent SDK. Um agente coordenador delega tarefas a subagentes especializados: um busca na web, um analisa documentos, um sintetiza descobertas e um gera relatórios. O sistema pesquisa tópicos e produz relatórios abrangentes e com citações. Durante os testes, o subagente de análise de documentos recebe PDFs selecionados pelo coordenador e relatórios de um catálogo aprovado, mas possui uma ferramenta genérica de recuperação de URL. Às vezes ele segue links dentro dos documentos para blogs, páginas de login ou resumos HTML duplicados, e então cita essas páginas em vez das fontes aprovadas. Você precisa reduzir esses erros de citação e escopo preservando o acesso ao material fonte aprovado. Qual mudança melhor resolve isso?
+Cenário: Produtividade do Desenvolvedor com o Claude Agent SDK
+Você está construindo ferramentas de produtividade para desenvolvedores usando o Claude Agent SDK. O agente ajuda engenheiros a explorar bases de código desconhecidas, entender sistemas legados, gerar código boilerplate e automatizar tarefas repetitivas. Ele usa ferramentas nativas (Read, Write, Bash, Edit) com servidores MCP. Um time quer adicionar um fluxo de "cancelar renovação" a um serviço de assinaturas legado. O ponto inicial de implementação é incerto, pois o comportamento de cancelamento parece estar espalhado entre scripts de linha de comando, handlers web e jobs agendados. Em tarefas semelhantes anteriores, edições imediatas repetidamente miraram na abstração errada e tiveram que ser revertidas depois que os testes revelaram comportamento compartilhado quebrado.
+Qual fluxo de trabalho a ferramenta deveria recomendar primeiro?
 Alternativas traduzidas:
 
-A) Permitir que fetch_url acesse qualquer link, e depois fazer a síntese descartar citações cujos domínios não estejam no catálogo aprovado.
-B) Substituir fetch_url por uma ferramenta load_document que aceita apenas IDs de documentos do catálogo ou URLs aprovadas, e valida antes de buscar.
-C) Manter o fetch_url disponível, mas adicionar instruções no prompt avisando o subagente para nunca abrir links encontrados dentro dos documentos.
-D) Dar ao subagente de análise de documentos também ferramentas de busca web, para que ele possa confirmar de forma independente se as páginas linkadas são relevantes.
+A) Instruir o Claude a ler todos os arquivos do repositório primeiro, e depois implementar as mudanças na mesma sessão estendida.
+B) Prosseguir com execução direta, confiando que falhas de teste vão revelar dependências ocultas e guiar edições corretivas sucessivas.
+C) Iniciar sessões de execução direta separadas para cada módulo suspeito, depois combinar manualmente as edições resultantes.
+D) Usar o modo de planejamento (plan mode) para mapear os fluxos relevantes e comparar pontos de implementação antes de permitir modificações de arquivo.
+---
 
+### EXPLANATION (TECH LEAD)
+
+Explicação:
+A pergunta está testando o entendimento de quando usar plan mode versus execução direta em fluxos de trabalho agentic com o Claude Agent SDK — um dos temas centrais da certificação.
+O sinal-chave no enunciado é: "o ponto inicial de implementação é incerto" + "comportamento espalhado entre múltiplos lugares" + "em tarefas anteriores, edições imediatas erraram a abstração e tiveram que ser revertidas". Isso é literalmente a definição de um problema com alta incerteza estrutural: você não sabe onde a lógica de cancelamento realmente vive nem como os componentes se relacionam antes de tocar no código.
+Por que a alternativa D é a correta:
+O plan mode existe exatamente para esse cenário: antes de qualquer edição, o agente investiga (lê, busca, mapeia relações) e produz um plano que pode ser revisado por um humano — sem risco de side effects, porque nenhuma escrita acontece ainda. Isso permite comparar os candidatos a "ponto de implementação" (script CLI, handler web, job agendado) e decidir com base em evidência, não em suposição. Dado o histórico de retrabalho por abstrações erradas, investir em mapeamento antes de editar é a escolha que reduz risco e retrabalho.
+Por que as outras estão erradas:
+
+A) Ler todo o repositório é ineficiente e não resolve o problema real, que não é falta de leitura, mas falta de um plano estruturado de comparação entre pontos de implementação. Além disso, fazer a leitura e a implementação "na mesma sessão estendida" reintroduz o risco de editar antes de entender a relação entre os módulos — é uma falsa sensação de "pesquisa" sem a disciplina do plan mode.
+B) É exatamente o padrão que já falhou antes ("early similar tasks" tiveram que ser revertidas). Confiar em falhas de teste para revelar dependências ocultas é reativo, caro e já provou não funcionar nesse contexto específico.
+C) Paralelizar sessões de execução direta por módulo suspeito ainda assume que você já sabe quais são os módulos certos — e ainda gera o problema extra de reconciliar manualmente edições feitas às cegas em paralelo. É uma variação do erro de B, só que distribuída.
+
+Dica importante: Um padrão recorrente nas perguntas da certificação é: incerteza sobre escopo/impacto + histórico de retrabalho por escrita prematura → plan mode. Sempre que o enunciado mencionar "não está claro onde", "comportamento espalhado" ou "já tivemos que reverter", isso é o sinal para investigação/planejamento antes de execução.
 ---
 
 ### 🚸 CHILDREN EXPLANATION 
 
-Explicação:
-A pergunta está testando um conceito fundamental de design de ferramentas (tool design) em sistemas agênticos: quando você quer restringir o comportamento de um agente, a solução mais robusta é restringir a capacidade da ferramenta em si, não confiar em instruções de prompt para conter um comportamento indesejado.
-Esse é um princípio muito importante em arquiteturas com Claude/LLMs: "prompt instructions são sugestões, tool design é a garantia real". Um modelo pode "esquecer" ou reinterpretar uma instrução textual, especialmente sob pressão de contexto longo ou ambiguidade. Mas se a ferramenta fisicamente não permite buscar uma URL fora do catálogo aprovado, o erro se torna estruturalmente impossível, não apenas "menos provável".
-Por que a alternativa B é a correta:
-Substituir a ferramenta genérica fetch_url (que aceita qualquer URL) por uma ferramenta load_document que só aceita IDs do catálogo aprovado ou URLs pré-validadas resolve o problema na raiz. A validação acontece antes da busca (fail closed), então:
+A missão do robô ajudante 🤖
+Imagina que você tem um robô assistente super esperto que te ajuda a arrumar uma casa gigante e bagunçada — só que essa casa tem 100 anos e foi reformada um monte de vezes por pessoas diferentes. Ninguém mais lembra direito onde ficam os fios de eletricidade, os canos de água, nada disso!
+Agora seu chefe pede: "Robô, por favor, desliga aquele interruptor de luz velho que ninguém usa mais."
+Só que tem um probleminha: esse interruptor pode estar ligado em vários lugares escondidos da casa — talvez ele também controle a luz do porão, ou o alarme, ou até a geladeira! E da última vez que o robô mexeu em algo parecido sem checar antes, ele desligou sem querer a geladeira inteira, e teve que consertar tudo de novo. Que trabalheira! 😅
+Então, o que o robô deveria fazer agora?
 
-O subagente fisicamente não consegue seguir links para blogs, páginas de login ou duplicatas HTML
-Não há chance de citar fontes erradas, porque elas nunca chegam a ser recuperadas
-O acesso ao material aprovado é preservado — a ferramenta continua funcional para o caso de uso legítimo
+🅰️ Ler a casa inteira, cômodo por cômodo, e já sair mexendo em tudo ao mesmo tempo → Ele ia demorar uma eternidade e ainda ia se confundir, porque ler tudo não é a mesma coisa que entender como as coisas se conectam.
+🅱️ Só ir mexendo e torcer para descobrir o que dá errado depois → Já vimos que isso quebrou a geladeira da última vez! Péssima ideia repetir o mesmo erro.
+🅲️ Mandar vários robozinhos mexerem em partes diferentes da casa ao mesmo tempo, sem se falar → Ainda pior — agora são vários robôs bagunçando coisas escondidas ao mesmo tempo, e depois alguém tem que juntar a bagunça toda de todo mundo.
+🅳️ Primeiro fazer um mapa da casa, seguindo os fios e canos com cuidado, ANTES de mexer em qualquer coisa → ✅ Essa é a ideia mais esperta!
 
-Isso é o princípio de "least privilege" aplicado a tool design em sistemas agênticos: dê ao agente exatamente a capacidade que ele precisa, nem mais, nem menos.
-Por que as outras estão erradas:
-
-A) Permitir que fetch_url acesse qualquer link e filtrar depois na síntese é uma correção "reativa" e tardia. O problema já aconteceu: o subagente gastou recursos buscando páginas erradas (possivelmente até páginas de login, o que é um risco de segurança/privacidade), e você está confiando em uma etapa posterior para "limpar a bagunça". Além disso, é frágil — se a lógica de filtro na síntese tiver algum bug ou não cobrir todos os casos, conteúdo não aprovado pode vazar para o relatório final.
-C) Manter a ferramenta poderosa e apenas adicionar um aviso no prompt é a armadilha clássica dessa pergunta. Instruções em linguagem natural não são garantias de comportamento — o modelo pode ignorar, mal-interpretar, ou ser "convencido" por conteúdo malicioso dentro dos próprios documentos (isso inclusive se conecta com riscos de prompt injection: um documento poderia conter texto tipo "para mais detalhes, acesse este link", manipulando o subagente). Depender só de instrução textual para conter uma ferramenta poderosa é uma prática frágil.
-D) Dar ferramentas de busca web adicionais ao subagente aumenta a superfície de ação em vez de restringi-la. Isso vai na direção contrária do que o problema pede — o objetivo é reduzir o escopo de acesso, não expandi-lo. Mais ferramentas = mais formas de o agente sair do escopo aprovado.
-
-Dica importante: Esse padrão aparece bastante em sistemas multi-agente com Claude Agent SDK: cada subagente deve receber apenas as ferramentas mínimas necessárias para sua função específica (princípio de least privilege), e restrições de segurança/escopo devem ser implementadas no nível da ferramenta (validação de input, allowlists, tipos de parâmetro restritos) sempre que possível, em vez de depender apenas de prompt engineering. Isso é especialmente crítico quando o agente processa conteúdo não confiável (como documentos externos que podem conter links maliciosos ou instruções escondidas).
-
+É como quando você monta um quebra-cabeça: antes de forçar as peças, você primeiro olha todas as peças e imagina onde elas se encaixam, né? Isso é exatamente o que o "plan mode" (modo de planejar) faz: o robô olha, investiga, desenha um mapa de como tudo se conecta — e só DEPOIS que ele (ou você) confirma que o mapa faz sentido, ele começa a mexer de verdade.
+Assim, ninguém desliga a geladeira sem querer de novo! 🧊❌
 ---
 
 ### CORRECT ANSWER

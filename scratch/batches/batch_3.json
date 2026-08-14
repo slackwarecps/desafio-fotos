@@ -1,0 +1,152 @@
+[
+  {
+    "question": "Scenario: Code Generation with Claude Code You are using Claude Code to accelerate software development. Your team uses it for code generation, refactoring, debugging, and documentation. You need to integrate it into your development workflow with custom slash commands, CLAUDE.md configurations, and understand when to use plan mode vs direct execution. Your /migrate-to-new- logger command uses a coordinator that launches subagents to scan packages and propose edits. In a dry run, the final plan says the legacy logger appears only in billing and notifications. Later, reviewers discover the auth package was never scanned because a subagent hit a path permission error, while the search subagent for reporting scanned successfully and found no matches. The coordinator received both results as \"no findings.\" What change would most improve reliability of future migration plans?",
+    "options": {
+      "B": "Terminate the entire migration workflow whenever any package scan fails, discarding successful findings from other subagents.",
+      "A": "Treat every subagent result with no code references as successful, then rely on reviewers to catch any missing packages.",
+      "C": "Have subagents report successful empty searches separately from access failures, including attempted paths, queries, partial results, and suggested next steps.",
+      "D": "Ask each subagent to summarize failures in natural language, letting the coordinator infer whether missing findings indicate clean code."
+    },
+    "num": "031"
+  },
+  {
+    "num": "032",
+    "question": "Scenario: Customer Support Resolution Agent You are building a customer support resolution agent using the Claude Agent SDK. The agent handles high-ambiguity requests like returns, billing disputes, and account issues. It has access to backend systems through MCP tools (get_customer, lookup_order, process_refund, escalate_to _human). Your target is 80%+ first-contact resolution while knowing when to escalate. Production logs show inconsistent tool selection for billing-related messages. Routine refund requests are sometimes escalated, while requests requiring policy review are sometimes sent directly to process_refund. There are no backend errors, and the tool registry shows broad descriptions with little detail about side effects, eligible inputs, or boundaries between refund handling and human escalation. What is the best first change to improve reliability?",
+    "options": {
+      "A": "Add a keyword router that sends messages containing refund to process _refund and messages containing supervisor to escalate_to_human.",
+      "B": "Raise temperature slightly so the agent explores alternative tool choices instead of repeatedly O choosing the same billing action.",
+      "C": "Merge process_refund and escalate_to_human into one handle_billing_case tool that internally decides the correct backend action.",
+      "D": "Rewrite the affected tool descriptions to specify purposes, required inputs, side effects, examples, and boundaries between refund and escalation workflows."
+    }
+  },
+  {
+    "num": "033",
+    "options": {
+      "A": "Force get_customer as the required tool for all turns, then let Claude decide whether additional tools are needed.",
+      "C": "Retry whenever assistant text sounds generic, using phrase matching to continue the loop until a tool appears.",
+      "D": "Keep tool_choice on auto and strengthen system prompt instructions requiring backend lookup before every customer-facing response.",
+      "B": "Configure tool_choice to any so Claude must call one available tool while retaining model- driven selection among applicable tools."
+    },
+    "question": "Scenario: Customer Support Resolution Agent You are building a customer support resolution agent using the Claude Agent SDK. The agent handles high-ambiguity requests like returns, billing disputes, and account issues, It has access to backend systems through MCP tools (get_customer, lookup_order, process_refund, escalate_to_human). Your target is 80%+ first-contact resolution while knowing when to escalate. During intake testing, when a customer provides enough identifying details but asks, \"Can you just check this?\", the agent sometimes replies with generic guidance instead of using any backend tool. You do not know in advance whether get_customer, lookup_order, or escalate_to_human is appropriate, but every production response must be grounded in at least one backend action. What configuration best addresses this behavior?"
+  },
+  {
+    "options": {
+      "B": "Keep tool-based structured output, then add semantic validation against diff metadata, severity rules, and finding consistency before publishing comments.",
+      "A": "Replace tool use with markdown output and parse the natural language explanation for contradictions before posting review comments.",
+      "C": "Lower temperature and instruct Claude to double-check every file path, line number, severity, and remediation before returning results.",
+      "D": "Make every finding field required in the JSON schema so Claude cannot omit uncertain values during automated review generation."
+    },
+    "question": "Scenario: Claude Code for Continuous Integration You are integrating Claude Code into your CI/CD pipeline. The system runs automated code reviews, generates test cases, and provides feedback on pull requests. You need to design prompts that provide actionable feedback and minimize false positives. Your review job emits structured findings that always pass JSON parsing and required- field checks. However, production logs show some findings reference line numbers outside the pull request diff, classify test-only issues as production blockers, or include remediation text that contradicts the reported issue. What change would most effectively improve reliability before posting comments to pull requests?",
+    "num": "034"
+  },
+  {
+    "options": {
+      "C": "Give each subagent access to every MCP tool, so agents can independently verify missing context before responding.",
+      "D": "Have the last subagent invoked produce the customer response, using whatever findings it has already received.",
+      "B": "Allow subagents to message each other directly, but require each message to include a free- form summary of rationale.",
+      "A": "Route all subagent requests and results through the coordinator, which records context, errors, and final resolution inputs."
+    },
+    "num": "035",
+    "question": "Scenario: Customer Support Resolution Agent You are building a customer support resolution agent using the Claude Agent SDK. The agent handles high-ambiguity requests like returns, billing disputes, and account issues. It has access to backend systems through MCP tools (get_customer, lookup_order, process_refund, escalate_to_human). Your target is 80% + first-contact resolution while knowing when to escalate. A prototype uses specialized subagents for identity verification, billing investigation, return eligibility, and account-risk review. Engineers want billing and returns subagents to pass partial findings directly to each other to resolve linked refund disputes faster. In tests, directly exchanged findings sometimes bypass escalation notes and leave the final customer response missing why one subagent retried a failed lookup. What architecture change best improves reliability without eliminating specialization?"
+  },
+  {
+    "question": "Scenario: Structured Data Extraction You are building a structured data extraction system using Claude. The system extracts information from unstructured documents, validates output using JSON schemas, and maintains high accuracy, It must handle edge cases gracefully and integrate with downstream systems. Your nightly run submits 30,000 document extraction requests. The result processing job must update the correct downstream record for each successful extraction and resubmit only the documents that failed validation or exceeded context limits. During testing, engineers notice that relying on the result file's line order creates occasional mismatches after retries and partial failure handling. What design should you use?",
+    "options": {
+      "D": "Submit one combined request containing all documents, so every extraction and failure appears in a single ordered output.",
+      "B": "Assume batch results preserve submission order, then join each response to the original manifest by its array position.",
+      "A": "Assign a stable custom_id derived from each document record, persist it with request metadata, and reconcile results using that identifier.",
+      "C": "Ask Claude to include the source filename in every extraction, then parse that field when processing failures."
+    },
+    "num": "036"
+  },
+  {
+    "options": {
+      "D": "Use Grep for 'policy-case' across repository contents, then Read every file returned by the content search.",
+      "A": "Read all package directories recursively, then ask Claude to infer which filenames match the fixture naming convention.",
+      "C": "Use Bash to run recursive file listing commands, then paste the complete output into the conversation for filtering.",
+      "B": "Use Glob with '**/*policy-case.json', review the matched paths, then Read only the relevant fixture files."
+    },
+    "num": "037",
+    "question": "Scenario: Customer Support Resolution Agent You are building a customer support resolution agent using the Claude Agent SDK. The agent handles high-ambiguity requests like returns, billing disputes, and account issues. It has access to backend systems through MCP tools (get_customer, lookup_order, process_refund, escalate_to_human). Your target is 80%+ first-contact resolution while knowing when to escalate. In the repository for this support agent, a regression appears only in test fixture files whose filenames end with ' policy-case.json'. These fixtures are scattered across multiple service packages, and you want Claude Code to identify the affected files before inspecting their contents. Which approach is most appropriate?"
+  },
+  {
+    "options": {
+      "B": "Restart the session whenever answers become inconsistent and require the agent to scan the entire repository again.",
+      "C": "Use /compact after every major tool call so the entire conversation remains summarized before additional investigation continues.",
+      "A": "Have agents maintain concise scratchpad files with key findings, file paths, and decisions, then reference them in later prompts.",
+      "D": "Append every raw tool result to each follow-up request so the agent can reconsider all discovered evidence each turn."
+    },
+    "num": "038",
+    "question": "Scenario: Customer Support Resolution Agent You are building a customer support resolution agent using the Claude Agent SDK. The agent handles high-ambiguity requests like returns, billing disputes, and account issues. It has access to backend systems through MCP tools (get_customer, lookup_order, process_refund, escalate_to_human). Your target is 80%+ first-contact resolution while knowing when to escalate. During a multi-hour investigation of the refund workflow, the agent correctly identifies several important files, policy branches, and edge cases. Later in the same session, it starts contradicting earlier findings, references generic support-system patterns, and asks to rediscover classes it already inspected. What change would best improve reliability across the rest of the investigation?"
+  },
+  {
+    "question": "Scenario: Customer Support Resolution Agent You are building a customer support resolution agent using the Claude Agent SDK. The agent handles high-ambiguity requests like returns, billing disputes, and account issues. It has access to backend systems through MCP tools (get_customer, lookup_order, process_refund, escalate_to_human). Your target is 80%+ first-contact resolution while knowing when to escalate. After adding regional order backends, production traces show the agent sometimes misreads raw lookup_order payloads: one region returns status_code: 3, another returns state: \"RETURN_PENDING\", and a third includes nested timestamps. The agent's final responses are inconsistent, even though each backend response is technically valid. What change best improves reliability without modifying every MCP tool implementation?",
+    "num": "039",
+    "options": {
+      "D": "Add a PostToolUse hook that transforms lookup_order outputs into a canonical support-case structure before Claude receives them.",
+      "C": "Parse the assistant's final text for status words and retry lookup_order whenever inconsistent wording appears.",
+      "B": "Expand the system prompt with every regional status mapping and ask Claude to normalize payloads during response generation.",
+      "A": "Require each customer message to include the customer's region so Claude can choose the correct payload interpretation."
+    }
+  },
+  {
+    "num": "040",
+    "options": {
+      "B": "Add a prompt line asking Claude to be conservative and avoid unnecessary tests whenever reviewing changed files in Cl.",
+      "C": "Store preferred testing style in ~/ claude/CLAUDE.md on the maintainer's laptop and copy outputs into pull requests.",
+      "D": "O Require developers to omit existing test files from CI context so Claude infers coverage needs from product code alone.",
+      "A": "Commit project-level CLAUDE.md guidance describing valuable test criteria, fixture conventions, and reusable helpers for Cl-invoked Claude Code."
+    },
+    "question": "Scenario: Code Generation with Claude Code You are using Claude Code to accelerate software development. Your team uses it for code generation, refactoring, debugging, and documentation. You need to integrate it into your development workflow with custom slash commands, CLAUDE.md configurations, and understand when to use plan mode vs direct execution. Your nightly Cl job asks Claude Code to propose tests for changed modules. Suggestions are consistently low value: duplicating brittle snapshots, mocking helpers your repository already provides, and ignoring team rules that prioritize behavior tests over implementation details. Developers run the job from ephemeral runners, so ad hoc local preferences are not present. What change would most effectively improve the quality and consistency of generated test suggestions?"
+  },
+  {
+    "question": "Scenario: Customer Support Resolution Agent You are building a customer support resolution agent using the Claude Agent SDK. The agent handles high-ambiguity requests like returns, billing disputes, and account issues. It has access to backend systems through MCP tools (get_customer, lookup_order, process_refund, escalate_to_human). Your target is 80%+ first-contact resolution while knowing when to escalate. Production logs show simple requests like \"Can you resend my tracking link?\" take nearly as long as multi-issue cases because every request runs through all specialist subagents. The extra passes sometimes introduce irrelevant refund or policy details into final responses, even when no refund is requested. Complex cases still require multiple specialists and a unified customer-facing answer. What change best improves the orchestration design?",
+    "num": "041",
+    "options": {
+      "C": "Let specialist subagents message each other directly, allowing whichever agent finishes first to assemble the final customer response.",
+      "B": "Have the coordinator assess request scope, delegate only to relevant specialist subagents, then aggregate their findings into one response.",
+      "D": "Route each request to a single keyword-matched specialist, bypassing aggregation unless the customer explicitly asks about multiple issues.",
+      "A": "O l Keep the fixed specialist sequence, but lower each subagent's max_tokens so simple requests complete with less overhead."
+    }
+  },
+  {
+    "num": "042",
+    "question": "Scenario: Claude Code for Continuous Integration You are integrating Claude Code into your CI/CD pipeline. The system runs automated code reviews, generates test cases, and provides feedback on pull requests. You need to design prompts that provide actionable feedback and minimize false positives. A senior engineer created a /pr-feedback workflow that applies your team's review checklist and suppresses known false-positive categories. It works on their laptop, but clean CI runners and new contributors report \"command not found\" unless they manually copy files from that engineer's home directory. You want the same command to be available from a fresh repository checkout and reviewed alongside workflow changes. What should you do?",
+    "options": {
+      "A": "Embed the review checklist directly in each workflow step so every pipeline job constructs its own prompt.",
+      "D": "Keep the command in ~/ claude/commands/ and add onboarding instructions for each developer and runner to copy it.",
+      "B": "Store the command markdown under claude/commands/ in the repository, then commit it with the Cl workflow changes.",
+      "C": "Move the checklist into CLAUDE.md and instruct reviewers to type the same prompt whenever CI needs review."
+    }
+  },
+  {
+    "num": "043",
+    "question": "Scenario: Structured Data Extraction You are building a structured data extraction system using Claude. The system extracts information from unstructured documents, validates output using JSON schemas, and maintains high accuracy. It must handle edge cases gracefully and integrate with downstream systems. Reviewers receive structured QA findings about extracted contract fields before downstream loading. After two weeks, audits show that most categories are useful, but findings labeled \"ambiguous payment terms\" are dismissed in 68% of reviews because the source wording is often acceptable. Reviewers have started ignoring the entire QA feed, including accurate findings about unsupported totals and missing effective dates. What should you do next?",
+    "options": {
+      "A": "Add a general instruction telling Claude to be conservative and report only findings it is highly confident about.",
+      "B": "Keep all finding categories active and ask reviewers to dismiss incorrect items until enough data accumulates.",
+      "D": "Temporarily suppress the ambiguous payment terms category while refining its criteria and examples before re-enabling it.",
+      "C": "Raise the global confidence threshold for all QA findings until the overall volume drops to an acceptable level."
+    }
+  },
+  {
+    "num": "044",
+    "question": "Scenario: Customer Support Resolution Agent You are building a customer support resolution agent using the Claude Agent SDK. The agent handles high-ambiguity requests like returns, billing disputes, and account issues. It has access to backend systems through MCP tools (get_customer, lookup_order, process_refund, escalate_to_human). Your target is 80%+ first-contact resolution while knowing when to escalate. During testing, the coordinator sends refund-investigation subagents long prompts that prescribe exact tool sequences and conditional branches. These subagents work on standard returns, but they fail or ask for unnecessary escalation when a customer describes unusual evidence, missing order numbers, or mixed billing and delivery concerns. What change would most improve subagent performance while preserving coordinator control?",
+    "options": {
+      "A": "Expand delegated prompts with more detailed step-by-step branches covering missing order numbers, mixed issues, and unusual evidence types.",
+      "B": "Require subagents to follow a fixed tool order and escalate whenever any expected intermediate field is unavailable.",
+      "C": "Rewrite delegated prompts to state the support objective, known context, quality criteria, constraints, and required structured return format.",
+      "D": "Have the coordinator parse each subagent's natural-language response for completion phrases before deciding whether to continue."
+    }
+  },
+  {
+    "options": {
+      "B": "Increase the overall random sample size for two more sprints, then decide using the combined acceptance rate.",
+      "A": "Require reviewers to check only low-confidence outputs, since high-confidence Claude Code results already passed aggregate evaluation.",
+      "C": "Adopt the 0.9 confidence threshold globally, then monitor incidents and re-enable review if production defects increase.",
+      "D": "Break down validation results by artifact category and generated field, then reduce review only for consistently reliable segments."
+    },
+    "num": "045",
+    "question": "Scenario: Code Generation with Claude Code You are using Claude Code to accelerate software development. Your team uses it for code generation, refactoring, debugging, and documentation. You need to integrate it into your development workflow with custom slash commands, CLAUDE.md configurations, and understand when to use plan mode vs direct execution. A three-month pilot dashboard reports 96% reviewer acceptance for Claude Code generated artifacts. Review notes show most accepted outputs are README edits and changelogs, while rejected outputs cluster around OpenAPI response schemas and database migration rollback notes. Leadership wants to stop manual review for any output where Claude reports confidence above 0.9. What is the most reliable next step?"
+  }
+]

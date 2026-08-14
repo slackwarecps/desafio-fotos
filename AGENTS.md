@@ -8,23 +8,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Core Workflow
 
-### Two Sources for Flashcards
+### Photo Preparation Phase
+Place new question photos in the repository root directory with any filename pattern (Screenshots, Captures, etc.). The skill handles renaming automatically.
 
-The system supports **two input sources** for generating enriched cards:
-
-1. **Photos** (`.png`, `.jpg`) → processed by `/gerar-cards-enriquecidos`
-   - Input folder: `cards/`
-   - Output folder: `outputs/cards-enriquecidos/`
-
-2. **Google Forms Export** (`formulario.tsv`) → processed by `/gerar-cards-enriquecidos-do-forms`
-   - Input file: `formulario.tsv` (root of repo)
-   - Output folder: `outputs/cards-enriquecidos-forms/`
-
-### Card Generation from Photos
-
-Place new question photos in `cards/` directory with any filename pattern (Screenshots, Captures, etc.). The skill handles renaming automatically.
-
-Invoke the skill:
+### Card Generation Phase
+Invoke the custom skill:
 ```bash
 /gerar-cards-enriquecidos
 ```
@@ -39,21 +27,6 @@ This skill automates the entire enrichment pipeline for each photo:
   - Individual analysis of why each incorrect option is wrong
   - Pattern/concept guidance ("Dica importante")
   - Marked correct answer
-
-### Card Generation from Forms
-
-For questions stored in `formulario.tsv` (Google Forms export), invoke the skill:
-```bash
-/gerar-cards-enriquecidos-do-forms 3    # Process next 3 questions
-# or
-/gerar-cards-enriquecidos-do-forms      # Process all pending questions
-```
-
-This skill automates text parsing and card generation for each form entry:
-- Parses the concatenated question/options text into separate fields
-- Generates the same `NNN-card.md` and `NNN-enriched-card.md` pair as the photo skill
-- Output stored separately in `outputs/cards-enriquecidos-forms/` to avoid numbering conflicts
-- Supports idempotent processing and configurable batch sizes
 
 ## Card Formats
 
@@ -98,23 +71,6 @@ Generates enriched flashcards from photos automatically.
 **Documentation:**
 - `.claude/skills/gerar-cards-enriquecidos/SKILL.md` — Overview
 - `.claude/skills/gerar-cards-enriquecidos/README.md` — Detailed instructions
-
-### `/gerar-cards-enriquecidos-do-forms`
-Generates enriched flashcards from questions stored in `formulario.tsv` (Google Forms export).
-- **Input**: `formulario.tsv` (TSV file with 60 questions + options concatenated inline)
-- **Process**: Parse → Extract → Create simple + enriched cards (with optional limit on quantity)
-- **Output**: `NNN-card.md` and `NNN-enriched-card.md` files in `outputs/cards-enriquecidos-forms/`
-- **Features**: Automatic text parsing, dual-level explanations, idempotent processing, configurable batch size
-
-**Documentation:**
-- `.claude/skills/gerar-cards-enriquecidos-do-forms/SKILL.md` — Detailed workflow
-- `.claude/skills/gerar-cards-enriquecidos-do-forms/README.md` — Quick start guide
-
-**Usage:**
-```
-/gerar-cards-enriquecidos-do-forms          # Process all pending questions
-/gerar-cards-enriquecidos-do-forms 3        # Process only next 3 new questions
-```
 
 ### `/exporta-cards-enriquecidos-para-pdf`
 Consolidates all enriched cards into a single PDF deck.
