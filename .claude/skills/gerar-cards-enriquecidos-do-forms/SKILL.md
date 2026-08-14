@@ -7,7 +7,24 @@ description: Gera cartões enriquecidos e didáticos para flashcards SRS a parti
 
 Implementação da skill que automatiza a geração de flashcards enriquecidos a partir de perguntas armazenadas em `formulario.tsv` (export de Google Forms).
 
-## Fluxo de Execução
+---
+
+## 🎯 Princípio Central: **Etapa Única Contínua**
+
+**Para CADA pergunta processada:**
+```
+Parsear → Card Simples → Análise → Card Enriquecido → (próxima pergunta)
+```
+
+**❌ NÃO FAZER:** Criar todos os cards simples, depois voltar para enriquecer
+
+**✅ FAZER:** Para cada pergunta, terminar completamente (simples + enriquecido) antes de passar para a próxima
+
+---
+
+## Fluxo de Execução — Etapa Única Contínua
+
+**🎯 Princípio:** Para cada pergunta, gerar **AMBOS os cards (simples + enriquecido) em um fluxo único**, sem pausas ou confirmações intermediárias.
 
 ### Fase 1: Ler e Validar o TSV
 
@@ -27,7 +44,7 @@ Leia o arquivo `formulario.tsv` localizado na raiz do repositório:
 **Determinação de escopo:**
 1. Verificar quantas linhas de dados já foram convertidas (existem pares `NNN-card.md` + `NNN-enriched-card.md` em `outputs/cards-enriquecidos-forms/`)
 2. Se a skill foi chamada com argumento numérico (ex: `/gerar-cards-enriquecidos-do-forms 3`), processar as próximas N perguntas **novas**; sem argumento, processar **todas** as pendentes
-3. "Já convertida" = ambos os arquivos `NNN-card.md` **e** `NNN-enriched-card.md` existem para aquela posição (mapeamento fixo: linha 2 do TSV → 001, linha 3 → 002, ... linha 61 → 060)
+3. "Já convertida" = ambos os arquivos `NNN-card.md` **E** `NNN-enriched-card.md` existem para aquela posição (mapeamento fixo: linha 2 do TSV → 001, linha 3 → 002, ... linha 61 → 060)
 
 **Mapeamento de numeração:**
 - Linha 2 do TSV (1ª pergunta de dados) → `001-card.md` + `001-enriched-card.md`
@@ -37,7 +54,44 @@ Leia o arquivo `formulario.tsv` localizado na raiz do repositório:
 
 Numeração é **sempre sequencial pela ordem no arquivo**, zero-padded a 3 dígitos.
 
-### Fase 2: Parsear Cada `perguntaRaw`
+---
+
+## ⚠️ PRINCÍPIO CRÍTICO: Fluxo Contínuo Sem Pausas
+
+Para **cada pergunta processada**, executar os passos 2a-2e em **sequência ininterrupta**:
+
+```
+Para cada pergunta:
+  └─ 2a: Verificar se já existe (ambos simples + enriquecido)
+      ├─ Se sim → PULAR COMPLETAMENTE e ir próxima pergunta
+      ├─ Se não → CONTINUAR (não pausar)
+  └─ 2b: Parsear pergunta e opções
+      └─ (Não pausar, ir direto para 2c)
+  └─ 2c: Criar card simples (NNN-card.md)
+      └─ (Não pausar, ir direto para 2d)
+  └─ 2d: Analisar e determinar resposta correta
+      └─ (Não pausar, ir direto para 2e)
+  └─ 2e: Criar card enriquecido (NNN-enriched-card.md)
+      └─ (Próxima pergunta)
+```
+
+**❌ ERRADO:**
+- Criar todos os cards simples primeiro, depois depois voltar para enriquecer
+
+**✅ CORRETO:**
+- Para cada pergunta: simples → enriquecido → próxima pergunta
+
+---
+
+### Fase 2: Processar Cada Pergunta (Fluxo Único Contínuo)
+
+**⚠️ IMPORTANTE:** Para cada pergunta, executar os passos 2a-2e **em sequência contínua, sem pausar**. Não criar o card simples e parar — criar AMBOS antes de passar para a próxima pergunta.
+
+#### Passo 2a: Verificar Idempotência
+- Se ambos os arquivos `NNN-card.md` **E** `NNN-enriched-card.md` já existem, **PULAR COMPLETAMENTE** esta pergunta
+- Passar para a próxima
+
+#### Passo 2b: Parsear Cada `perguntaRaw`
 
 O texto em `perguntaRaw` contém o enunciado completo e as 4 opções coladas **sem separador visível**. As opções vêm no formato: `...to: A.texto_opcao_aB.texto_opcao_bC.texto_opcao_cD.texto_opcao_d`
 
@@ -73,9 +127,9 @@ options = {
 
 ⚠️ **Importante:** O `question` deve terminar na questão pura, SEM os prefixos `A.`, `B.`, `C.`, `D.` — essas alternativas ficam apenas na estrutura de `options`, nunca no Scenario final.
 
-### Fase 3: Criar Card Simples
+#### Passo 2c: Criar Card Simples
 
-Crie o arquivo `outputs/cards-enriquecidos-forms/NNN-card.md` com a estrutura **EXATA**:
+Imediatamente após o parse (sem pausar), crie o arquivo `outputs/cards-enriquecidos-forms/NNN-card.md` com a estrutura **EXATA**:
 
 ```markdown
 Scenario: [Pergunta completa em inglês - SEM ALTERNATIVAS - TUDO NA MESMA LINHA]
@@ -108,20 +162,20 @@ Scenario: An agent is dropped into an unfamiliar repository and asked to add a f
 - ✅ Opções com checkboxes `[ ] A -`, etc., sem o prefixo "A." da entrada TSV (remova o "A." antes de colocar no card)
 - ✅ Alternativas NUNCA aparecem no Scenario — aparecem apenas abaixo do `---` como lista de checkboxes
 
-### Fase 4: Analisar e Determinar a Resposta Correta
+#### Passo 2d: Analisar e Determinar a Resposta Correta
 
-Analise a pergunta e as 4 opções para determinar **automaticamente** qual é a resposta correta com base no conhecimento técnico/arquitetural.
+**IMEDIATAMENTE após criar o card simples** (sem pausar), analise a pergunta e as 4 opções para determinar **automaticamente** qual é a resposta correta com base no conhecimento técnico/arquitetural.
 
 **Método:**
 1. Use o Claude para analisar a pergunta e propor qual alternativa é a correta
 2. Documente o **raciocínio técnico** (qual conceito/padrão a pergunta testa, por que essa alternativa é superior às outras)
-3. Armazene a letra correta (A, B, C, ou D) para uso na Fase 5
+3. Armazene a letra correta (A, B, C, ou D) para uso no passo seguinte
 
 **IMPORTANTE:** O valor na coluna `Coluna 1` do TSV (1–60) é **apenas um índice sequencial** e **NÃO É O GABARITO**. Descarte esse valor — a resposta correta deve ser determinada por análise técnica.
 
-### Fase 5: Criar Card Enriquecido
+#### Passo 2e: Criar Card Enriquecido (Etapa Final do Fluxo)
 
-Crie o arquivo `outputs/cards-enriquecidos-forms/NNN-enriched-card.md` seguindo **EXATAMENTE** o template em `templates/001-enriched-card.md`.
+**SEM PAUSAR** entre os passos anteriores, crie o arquivo `outputs/cards-enriquecidos-forms/NNN-enriched-card.md` seguindo **EXATAMENTE** o template em `templates/001-enriched-card.md`.
 
 **Estrutura obrigatória (em ordem):**
 
@@ -268,13 +322,14 @@ Dica importante:
 - **Sempre diga o motivo específico:** "Isso falha porque..." ou "Problema: ... Consequência: ..."
 - Conecte o motivo da falha aos conceitos testados
 
-## Fase 6: Resumo
+### Fase 3: Resumo Final
 
-Ao final, liste:
-- ✅ Cards criados (números: 001, 002, 003, ...) — indicar a pasta de saída `outputs/cards-enriquecidos-forms/`
-- ✅ Total de cards gerados nesta execução
-- ℹ️ Quantas perguntas do TSV ainda restam pendentes (se aplicável)
-- ✅ Confirmação de sucesso
+Ao final de **TODAS** as perguntas processadas, liste:
+- ✅ Cards criados nesta execução (números: NNN-NNN) — indicar a pasta de saída `outputs/cards-enriquecidos-forms/`
+- ✅ Total de pares criados (simples + enriquecido) nesta execução
+- ✅ Quantos cards já existiam (pulados por idempotência)
+- ℹ️ Quantas perguntas do TSV ainda restam pendentes (se houver)
+- ✅ Confirmação de sucesso com estatísticas
 
 ---
 
@@ -347,23 +402,36 @@ Scenario: An agent is dropped into an unfamiliar repository and asked to add a f
 
 ---
 
-## Checklist de Execução
+## Checklist de Execução — Fluxo Contínuo
 
+### Fase 1: Preparação
 - [ ] Ler `formulario.tsv`
 - [ ] Validar estrutura (3 colunas, 60 linhas de dados)
 - [ ] Determinar quantas perguntas processar (conforme argumento ou todas)
-- [ ] Verificar idempotência (quais já foram convertidas)
-- [ ] Para cada pergunta nova:
-  - [ ] Parsear `perguntaRaw` em enunciado + 4 opções
-  - [ ] Criar `outputs/cards-enriquecidos-forms/NNN-card.md` com estrutura simples
-  - [ ] Analisar automaticamente e determinar resposta correta
-  - [ ] Traduzir conteúdo para português
-  - [ ] Criar `outputs/cards-enriquecidos-forms/NNN-enriched-card.md` com:
+- [ ] Verificar idempotência (quais pares já foram completamente convertidos)
+
+### Fase 2: Para Cada Pergunta Nova (Fluxo Contínuo, sem pausas)
+Para cada pergunta não processada:
+  - [ ] **Passo 2a:** Verificar se ambos NNN-card.md e NNN-enriched-card.md existem
+    - Se sim → PULAR COMPLETAMENTE (ir próxima pergunta)
+    - Se não → CONTINUAR (não pausar)
+  - [ ] **Passo 2b:** Parsear `perguntaRaw` em enunciado + 4 opções
+  - [ ] **Passo 2c:** Criar `NNN-card.md` (card simples)
+  - [ ] **Passo 2d:** Analisar e determinar resposta correta
+  - [ ] **Passo 2e:** Criar `NNN-enriched-card.md` com:
     - [ ] Pergunta em inglês + opções
-    - [ ] TRANSLATED QUESTION com tradução fiel
-    - [ ] EXPLANATION (TECH LEAD) com: conceito testado, análise correta (5-7 linhas), por que outras falham (motivo específico), padrão recorrente
-    - [ ] 🚸 CHILDREN EXPLANATION com: explicação acessível, por que correta, por que outras erradas (motivo específico), dica importante
+    - [ ] TRANSLATED QUESTION (tradução fiel PT-BR)
+    - [ ] EXPLANATION (TECH LEAD):
+      - [ ] Introdução ao conceito testado
+      - [ ] Análise profunda de por que [X] é correta (5-7 linhas)
+      - [ ] Por que A/B/C/D estão erradas (motivo específico cada uma)
+      - [ ] Dica importante (padrão recorrente)
+    - [ ] 🚸 CHILDREN EXPLANATION (mesma estrutura, linguagem acessível)
     - [ ] CORRECT ANSWER com checkbox
-- [ ] Listar todos os cards criados ao final
-- [ ] Indicar quantas perguntas ainda restam pendentes
-- [ ] Confirmar sucesso
+
+### Fase 3: Resumo Final
+- [ ] Listar todos os pares de cards criados nesta execução (simples + enriquecido)
+- [ ] Total de pares processados (NNN-NNN)
+- [ ] Quantos pares foram pulados por idempotência
+- [ ] Quantas perguntas ainda restam pendentes
+- [ ] Confirmar sucesso e estatísticas

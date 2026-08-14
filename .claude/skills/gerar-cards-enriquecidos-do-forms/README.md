@@ -28,23 +28,22 @@ Processa apenas as **próximas 3 perguntas novas** (útil para teste ou processa
 
 ---
 
-## 📋 Processo de Geração
+## 📋 Processo de Geração — Etapa Única Contínua
 
-### Fase 1: Detecção e Validação
+⚠️ **Princípio Central:** Para cada pergunta, gerar **ambos os cards (simples + enriquecido)** em um fluxo único, sem pausas.
 
-Lê o arquivo `formulario.tsv` (localizado na raiz do repositório) e valida sua estrutura.
+### Fluxo por Pergunta
 
-### Fase 2: Parse de Perguntas
+Para cada pergunta do TSV:
+1. **Verificar idempotência** — Se ambos os arquivos (simples + enriquecido) existem, PULAR
+2. **Parsear** — Extrair pergunta + 4 opções do texto bruto colado
+3. **Card Simples** — Criar `NNN-card.md` (pergunta + checkboxes)
+4. **Análise Técnica** — Determinar resposta correta
+5. **Card Enriquecido** — Criar `NNN-enriched-card.md` (análise completa)
+6. **Próxima Pergunta** — Sem pausas, repetir fluxo
 
-Extrai do texto bruto (`perguntaRaw`) de cada linha:
-- Pergunta/cenário completo em inglês
-- 4 opções (A, B, C, D) — removidas do texto colado sem separador
-
-### Fase 3: Geração de Cards
-
-Para cada pergunta nova, cria:
-1. **Card Simples** (`NNN-card.md`) — Pergunta + Opções (formato básico)
-2. **Card Enriquecido** (`NNN-enriched-card.md`) — Pergunta + Tradução + TECH LEAD + CHILDREN EXPLANATION + Resposta
+❌ **ERRADO:** Processar todos os simples, depois todos os enriquecidos
+✅ **CORRETO:** Simples → Enriquecido → Próxima Pergunta (ciclo completo)
 
 ---
 
