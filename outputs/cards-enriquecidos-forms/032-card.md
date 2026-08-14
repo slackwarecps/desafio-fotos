@@ -1,0 +1,8 @@
+Scenario: When researching "renewable energy adoption," the web search agent returns recent statistics (2024: 35% adoption) while the document analysis agent extracts data from internal reports (2022: 18% adoption). The synthesis agent incorrectly flags these as contradictory sources rather than recognizing the data shows growth over time. What change would best enable the synthesis agent to correctly interpret such temporal differences?
+
+---
+
+[ ] A - Require subagents to include publication or data collection dates in their structured outputs.B.Add a conflict resolution agent that automatically discards older data when newer data exists for the same metric.C.Configure the web search agent to only return results from the past 6 months.D.Instruct the synthesis agent to always treat the most recent data as authoritative and place older findings in a separate historical appendix.
+[ ] B - Add a conflict resolution agent that automatically discards older data when newer data exists for the same metric.C.Configure the web search agent to only return results from the past 6 months.D.Instruct the synthesis agent to always treat the most recent data as authoritative and place older findings in a separate historical appendix.
+[ ] C - Configure the web search agent to only return results from the past 6 months.D.Instruct the synthesis agent to always treat the most recent data as authoritative and place older findings in a separate historical appendix.
+[ ] D - Instruct the synthesis agent to always treat the most recent data as authoritative and place older findings in a separate historical appendix.

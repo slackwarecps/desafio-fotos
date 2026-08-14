@@ -1,0 +1,8 @@
+Scenario: Production monitoring shows that follow-up queries like "summarize what we learned about market trends" consistently take 40+ seconds. Investigation reveals the coordinator spawns the synthesis subagent for each summarization request, passing 80K+ tokens of accumulated findings. The coordinator already has these findings in its context from orchestrating the research. What's the most effective way to improve response time for these follow-up summaries?
+
+---
+
+[ ] A - Pre-generate and cache summaries at multiple granularities whenever new findings accumulate.B.Have the coordinator handle straightforward summarization requests directly using its existing context, reserving subagent spawning for complex analysis.C.Enable prompt caching on the synthesis subagent to reduce the overhead of repeatedly transferring the same research findings.D.Spawn the synthesis subagent with reduced context and have it request specific findings from the coordinator on-demand.
+[ ] B - Have the coordinator handle straightforward summarization requests directly using its existing context, reserving subagent spawning for complex analysis.C.Enable prompt caching on the synthesis subagent to reduce the overhead of repeatedly transferring the same research findings.D.Spawn the synthesis subagent with reduced context and have it request specific findings from the coordinator on-demand.
+[ ] C - Enable prompt caching on the synthesis subagent to reduce the overhead of repeatedly transferring the same research findings.D.Spawn the synthesis subagent with reduced context and have it request specific findings from the coordinator on-demand.
+[ ] D - Spawn the synthesis subagent with reduced context and have it request specific findings from the coordinator on-demand.

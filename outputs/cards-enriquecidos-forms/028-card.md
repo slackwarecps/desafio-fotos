@@ -1,0 +1,8 @@
+Scenario: Your extraction uses tool use with a JSON schema where `property_type` is defined as an enum: ['house', 'apartment', 'condo', 'townhouse']. After deployment, 8% of extractions fail schema validation. Investigation reveals listings mention many uncommon property types—"studio", "loft", "duplex", "mobile home", "tiny house", "converted warehouse"—and new types continue appearing regularly. What's the most effective long-term solution?
+
+---
+
+[ ] A - Continuously expand the enum to include newly observed property types and add monitoring for additional edge cases.B.Add an "other" value to your enum with a separate `property_type_detail` string field for specifics when "other" is selected.C.Change `property_type` from an enum to a free-form string and implement a normalization step in post-processing.D.Add few-shot examples to your prompt demonstrating how to map unexpected property types to the closest existing enum value.
+[ ] B - Add an "other" value to your enum with a separate `property_type_detail` string field for specifics when "other" is selected.C.Change `property_type` from an enum to a free-form string and implement a normalization step in post-processing.D.Add few-shot examples to your prompt demonstrating how to map unexpected property types to the closest existing enum value.
+[ ] C - Change `property_type` from an enum to a free-form string and implement a normalization step in post-processing.D.Add few-shot examples to your prompt demonstrating how to map unexpected property types to the closest existing enum value.
+[ ] D - Add few-shot examples to your prompt demonstrating how to map unexpected property types to the closest existing enum value.
