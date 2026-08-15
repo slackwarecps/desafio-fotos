@@ -3,6 +3,114 @@ name: gerar-cards-enriquecidos-do-forms
 description: Gera cartões enriquecidos e didáticos para flashcards SRS a partir das perguntas em formulario.tsv, usando orquestração paralela de 4 agentes especializados (parser, translator, tech-enricher, kids-enricher) com teto de 5 agentes simultâneos.
 ---
 
+## COORDENADOR — INSTRUÇÕES DE EXECUÇÃO
+
+Você é o coordenador desta skill. Sua missão é orquestrar 4 subagentes especializados para transformar perguntas TSV em flashcards enriquecidos. 
+
+### Fase 1: Parsear Argumentos e Validar Modo
+
+Analise os argumentos passados:
+- **Nenhum argumento**: Modo 1 (processar TODAS as perguntas pendentes)
+- **Um número** (ex: `5`): Modo 2 (processar APENAS pergunta 5 = 005-card.md + 005-enriched-card.md)
+- **Dois números** (ex: `10 20`): Modo 3 (processar intervalo pergunta 10 até 20, inclusive ambas)
+
+Se argumentos forem inválidos (texto ao invés de número, intervalo ilógico, etc), rejeite com mensagem clara.
+
+### Fase 2: Ler e Validar Arquivo TSV
+
+1. Abra `formularios/formulario.tsv`
+2. Verifique que tem cabeçalho na linha 1
+3. Conte linhas de dados: `N = total_linhas - 1` (exclui cabeçalho)
+4. Extraia o mapa: linha 2 → card 001, linha 3 → card 002, ..., linha N+1 → card NNN (com zero-padding de 3 dígitos)
+5. Para Modo 2 e 3: valide que números estão entre 1 e N
+
+### Fase 3: Aplicar AND Rule (Idempotência)
+
+Para CADA pergunta no escopo (Modo 1, 2 ou 3):
+- Verifique se AMBOS existem: `outputs/cards-enriquecidos-forms/NNN-card.md` E `outputs/cards-enriquecidos-forms/NNN-enriched-card.md`
+- **Se AMBOS existem**: PULAR (marque como "idempotência — pulado")
+- **Se nenhum ou apenas um existe**: marque para processar (4 estágios: parser → translator → tech → kids)
+
+### Fase 4: Orquestração do Pipeline (Máx 5 Agentes Simultâneos)
+
+Para CADA pergunta a processar:
+
+**Estágio 1 (Parser):** 
+- Disparar `Agent(subagent_type: "card-parser", prompt: "NNN=005, raw_text=...")`
+- Aguardar resposta com status "PARSED NNN OK"
+- Se falhar: marque erro e continue
+
+**Estágio 2 (Translator):**
+- Disparar `Agent(subagent_type: "card-translator", prompt: "NNN=005, card_path=...")`
+- Aguardar resposta com status "TRANSLATED NNN OK"
+
+**Estágio 3 (Tech Enricher):**
+- Disparar `Agent(subagent_type: "card-enricher-tech", prompt: "NNN=005, enriched_path=...")`
+- Aguardar resposta com status "ENRICHED_TECH NNN OK"
+
+**Estágio 4 (Kids Enricher):**
+- Disparar `Agent(subagent_type: "card-enricher-kids", prompt: "NNN=005, enriched_path=...")`
+- Aguardar resposta com status "ENRICHED_KIDS NNN OK"
+
+**Restrição de Paralelismo:**
+- Máximo 5 agentes podem estar em voo SIMULTANEAMENTE
+- Cada pergunta passa por 4 estágios em SEQUÊNCIA (parser → translator → tech → kids)
+- DIFERENTES perguntas rodam em PARALELO
+- Quando um agente termina, dispare o próximo da fila (ou próximo estágio da mesma pergunta)
+
+### Fase 5: Integração com Logging
+
+Use `logging_helper.sh` para sincronizar logs:
+```bash
+source .claude/skills/gerar-cards-enriquecidos-do-forms/logging_helper.sh
+
+log_start "N cards"  # No início
+log_agent_dispatch "card-parser" "005"  # Ao disparar
+log_agent_complete "card-parser" "005" "OK"  # Ao completar
+log_consolidating "005"  # Antes de consolidar
+log_consolidated "005"  # Após consolidar
+log_end  # No final
+```
+
+Garanta que CADA linha seja gravada NO CHAT E NO ARQUIVO `desafio.log` com timestamp — 100% sincronizados.
+
+### Fase 6: Disparar Gerador-de-Reports (Obrigatório)
+
+Assim que o ÚLTIMO kids-enricher terminar (status "ENRICHED_KIDS NNN OK") E não houver mais agentes em voo:
+
+```bash
+total_enriquecidos=$(ls outputs/cards-enriquecidos-forms/*-enriched-card.md 2>/dev/null | wc -l)
+
+if [ "$total_enriquecidos" -gt 0 ]; then
+    Agent(subagent_type: "gerador-de-reports", prompt: "cards_dir=outputs/cards-enriquecidos-forms/")
+    Aguardar resposta com status "REPORT ... OK"
+    log_agent_complete "gerador-de-reports" "XXX-YYY" "OK"
+else
+    log_info "Nenhum card enriquecido disponível — PDF pulado"
+fi
+```
+
+**IMPORTANTE:** O PDF contém EXATAMENTE os `*-enriched-card.md` existentes no diretório, NÃO somente os dessa rodada. Se há 15 cards enriquecidos, o PDF terá 15 — não há número mágico.
+
+### Fase 7: Gerar Resumo Final
+
+Após o PDF (ou se nenhum card enriquecido), print:
+```
+✅ PROCESSAMENTO CONCLUÍDO
+
+📊 Estatísticas:
+  - Pulados por idempotência: N
+  - Cards enriquecidos nesta execução: N
+  - Falhas permanentes: N
+  - Ainda pendentes: N
+```
+
+### Fase 8: Status Final
+
+Log de conclusão com timestamp e caminho do PDF (se gerado).
+
+---
+
 # Skill: Gerar Cards Enriquecidos a partir do Formulário TSV (Pipeline de 4 Agentes)
 
 Implementação da skill que automatiza a geração de flashcards enriquecidos a partir de perguntas armazenadas em `formularios/formulario.tsv`, usando um coordenador que orquestra **4 subagentes especializados** em paralelo, com teto de 5 agentes simultâneos.

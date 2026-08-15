@@ -368,10 +368,12 @@ def main():
     output_md = f"outputs/{filename_safe_title}-{today}.md"
     output_pdf = f"outputs/{filename_safe_title}-{today}.pdf"
 
-    # Encontrar cards enriquecidos (busca em absoluto > relativo > raiz)
-    cards_dir = "/Users/fabioalvaropereira/Desktop/desafio-fotos/outputs/cards-enriquecidos"
-    if not os.path.exists(cards_dir):
+    # Encontrar cards enriquecidos (CARDS_DIR env > relativo > absoluto > raiz)
+    cards_dir = os.environ.get("CARDS_DIR")
+    if not cards_dir or not os.path.exists(cards_dir):
         cards_dir = "outputs/cards-enriquecidos"
+    if not os.path.exists(cards_dir):
+        cards_dir = "/Users/fabioalvaropereira/Desktop/desafio-fotos/outputs/cards-enriquecidos"
     if not os.path.exists(cards_dir):
         cards_dir = "."
     

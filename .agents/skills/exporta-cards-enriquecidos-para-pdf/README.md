@@ -222,10 +222,12 @@ Quando o usuário chamar `/exporta-cards-enriquecidos-para-pdf`:
 
 ## Exemplos
 
-Veja o template de referência:
-- `/Users/fabioalvaropereira/Desktop/desafio-fotos/templates/deck-exemplo.md`
+Template canônico do PDF (**fonte única — leitura obrigatória antes de exportar**):
+- `templates/pdf-report-template.md`
 
-Esse arquivo mostra exatamente a estrutura esperada no PDF.
+Esse arquivo define exatamente a estrutura esperada no PDF (capa, índice, página de card,
+página final, mapa seção→bloco e padrões de formatação). É o mesmo template usado pelo agente
+`gerador-de-reports` na Fase 4 do pipeline — layout único para os dois fluxos.
 
 ## Checklist de Execução
 

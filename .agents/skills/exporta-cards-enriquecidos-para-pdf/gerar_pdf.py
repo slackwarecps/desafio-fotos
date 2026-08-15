@@ -111,7 +111,7 @@ def md_block(s: str) -> str:
 
 CSS = """
 @page { size: A4; margin: 18mm 16mm 20mm 16mm;
-        @top-right { content: counter(page); } }
+        @bottom-center { content: counter(page); } }
 * { box-sizing: border-box; }
 body { font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
        font-size: 11.5pt; line-height: 1.55; color: #1c1c1e; margin: 0; }
@@ -161,15 +161,6 @@ strong { color: #0b0b0c; }
 .answer { background: #eaf5ec; border-left: 4px solid #2e8b57;
           padding: 3.5mm 4.5mm; border-radius: 4px; }
 .answer .letter { font-weight: 700; color: #2e8b57; font-size: 12.5pt; }
-
-/* Gabarito */
-.gabarito { page-break-after: always; }
-.gabarito h2 { font-size: 16pt; color: #1a4f9c; margin-bottom: 6mm; }
-.gabarito table { width: 100%; border-collapse: collapse; margin-bottom: 6mm; }
-.gabarito th { background: #1a4f9c; color: white; padding: 2.5mm 3mm; text-align: left; font-size: 11pt; }
-.gabarito td { border-bottom: 1px solid #e5e5ea; padding: 2.5mm 3mm; font-size: 10.5pt; vertical-align: top; }
-.gabarito td.num { font-weight: 700; color: #1a4f9c; width: 12%; }
-.gabarito .total { font-weight: 700; color: #48484a; margin-top: 4mm; }
 
 /* Página final */
 .end { text-align: center; padding-top: 40mm; }
@@ -227,17 +218,6 @@ def build_html(cards: list, generated: str) -> str:
                 parts.append(md_block(c[key]))
             parts.append("</div>")
         parts.append("</section>")
-
-    # Gabarito
-    parts.append("<section class='gabarito'><h2>📝 GABARITO</h2>")
-    parts.append("<table><thead><tr><th class='num'>PERGUNTA</th><th>RESPOSTA</th></tr></thead><tbody>")
-    for c in cards:
-        parts.append(
-            f"<tr><td class='num'>{int(c['number'])}</td>"
-            f"<td>[ ] {c['answer_letter']} - {md_inline(c['answer_text'])}</td></tr>"
-        )
-    parts.append("</tbody></table>")
-    parts.append(f"<div class='total'>Total de Respostas: {total}</div></section>")
 
     # Página final
     parts.append(

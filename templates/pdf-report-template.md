@@ -86,7 +86,7 @@ bitmap colorido. Alternativas descartadas por falharem com emoji:
   `PERGUNTA (PORTUGUÊS)` sempre abre uma página nova (`page-break-before: always`), para que o
   enunciado em inglês e suas alternativas possam ser lidos e respondidos sem que a tradução
   apareça no mesmo campo de visão
-- Numeração de páginas no rodapé; novo card sempre começa em página nova (`page-break-after`)
+- Numeração de páginas no topo à direita; novo card sempre começa em página nova (`page-break-after`)
 - Cabeçalho do card: barra azul (`#1a4f9c`) arredondada, com `Card NNN/TOTAL` à esquerda e o
   número do arquivo à direita
 - Cada bloco abre com **ícone + título** azul e régua fina (`border-bottom`) abaixo
@@ -131,7 +131,13 @@ a página seguinte.
 > depois dela. A regex precisa aceitar fim-de-arquivo como delimitador, senão a resposta sai
 > vazia no PDF.
 
-### 4. Página final
+### 4. Gabarito
+
+- Título 📝 **GABARITO**
+- Tabela com `PERGUNTA` (número do arquivo, sem zeros à esquerda) e `RESPOSTA` (letra correta e texto)
+- `Total de Respostas: TOTAL`
+
+### 5. Página final
 
 - Título 🏁 **Fim do Deck**
 - `Cards neste deck: TOTAL` e data de geração
