@@ -1,5 +1,8 @@
 # Execution logs (local, not versioned)
 desafio.log
 
+# Output files (generated, not versioned)
+outputs/
+
 # System
 .DS_Store
