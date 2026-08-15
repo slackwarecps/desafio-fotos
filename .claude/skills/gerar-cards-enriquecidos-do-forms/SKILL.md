@@ -23,15 +23,20 @@ Cada linha passa por 4 estágios em sequência, mas linhas diferentes rodam em p
 - **Localização:** `formularios/formulario.tsv` (na raiz do repositório)
 - **Estrutura:**
   - Linha 1: cabeçalho (`Carimbo de data/hora`, `perguntaRaw`, `Coluna 1`)
-  - Linhas 2-61: 60 linhas de dados
+  - Linhas 2..N+1: **N linhas de dados** — `N` é sempre **contado do arquivo**, nunca assumido
   - Col 2 (`perguntaRaw`): texto bruto com enunciado + 4 opções coladas (sem separador)
-  - Col 3 (`Coluna 1`): índice sequencial 1–60 — **NÃO é o gabarito**
+  - Col 3 (`Coluna 1`): índice sequencial 1–N — **NÃO é o gabarito**
+
+> **`N` não é fixo.** Hoje o TSV tem 60 linhas, mas esse número é apenas o estado atual do
+> arquivo. Todo cálculo (escopo, idempotência, total do deck, PDF) deriva de
+> `N = linhas de dados do TSV`. Se o formulário crescer para 80 ou encolher para 12,
+> nada nesta skill precisa mudar.
 
 ### Numeração de cards
 - Linha 2 do TSV → `001-card.md` + `001-enriched-card.md`
 - Linha 3 do TSV → `002-card.md` + `002-enriched-card.md`
 - ... (sequencial)
-- Linha 61 do TSV → `060-card.md` + `060-enriched-card.md`
+- Linha N+1 do TSV → `NNN-card.md` + `NNN-enriched-card.md` (NNN = N com zero-padding de 3 dígitos)
 
 ### Escopo (qual pergunta processar)
 - **Sem argumento:** `/gerar-cards-enriquecidos-do-forms` → processa **todas as perguntas ainda pendentes**
@@ -80,9 +85,13 @@ Coordenador (esta skill)
   │    │
   │    └─ Mantém fila de até 5 agentes em voo; conforme um termina, aciona o próximo
   │
-  ├─ Fase 4: Verificar se todos os 60 cards estão completos
+  ├─ Fase 4: SEMPRE disparar gerador-de-reports (etapa obrigatória)
   │    │
-  │    └─ Se SIM → Disparar gerador-de-reports para gerar PDF
+  │    └─ Assim que o ÚLTIMO card-enricher-kids da execução devolver
+  │       "ENRICHED_KIDS NNN OK (FINAL)" e não houver mais agentes em voo:
+  │       ──▶ Agent(subagent_type: "gerador-de-reports", prompt: cards_dir)
+  │           → gera outputs/Report dd-mm-yyyy hh:mm:ss.pdf
+  │           → devolve "REPORT NNN-NNN OK <path>"
   │
   └─ Fase 5: Resumo final (criados / pulados / falhos / pendentes)
 ```
@@ -170,13 +179,13 @@ log_end
 
 1. Ler `formularios/formulario.tsv`
 2. Validar cabeçalho (3 colunas esperadas)
-3. Contar linhas de dados (esperado: 60)
-4. Montar mapa: `{ NNN_string: perguntaRaw_text }`
+3. **Contar linhas de dados → `N`** (não presuma 60; use o que o arquivo tiver)
+4. Montar mapa: `{ NNN_string: perguntaRaw_text }` (com exatamente `N` entradas)
 5. Validar escopo (argumento numérico ou "todas as pendentes")
 
 ### Fase 2: Classificação por Idempotência
 
-Para cada NNN de 001 a 060:
+Para cada NNN de 001 até `N`:
 - Se `NNN-card.md` E `NNN-enriched-card.md` existem → `skip`
 - Se nenhum existe → `parse_translate_enrich_all_4_stages`
 - Se só alguns estágios foram feitos → `continue_from_next_stage`
@@ -360,7 +369,7 @@ Cada linha abaixo é impressa no chat **E** gravada em `desafio.log` (exatamente
 🚀 Iniciando processamento de 3 perguntas (pipeline de 4 agentes)...
 
 📖 Lendo formularios/formulario.tsv... ✓
-  - 60 perguntas no total
+  - 60 perguntas no total   ← valor CONTADO do TSV nesta execução, não constante
   - Determinando escopo: próximas 3 pendentes (001, 002, 003)
 
 🔍 Verificando idempotência (AND):
@@ -427,28 +436,74 @@ Cada linha abaixo é impressa no chat **E** gravada em `desafio.log` (exatamente
 - `.claude/agents/card-enricher-kids.md` — Spec do kids enricher
 - `templates/001-enriched-card.md` — Exemplo de card enriquecido final
 
+### Templates de Formato (leitura obrigatória pelos agentes)
 
-## Gerador de Reports (Etapa Automática)
+- `templates/translated-card-template.md` — Layout canônico da etapa do **translator**
+  (bloco EN intacto + `Cenário:` + opções `A)`–`D)`)
+- `templates/enriched-sections-template.md` — Layout canônico das etapas dos **enrichers**
+  (TECH, KIDS e CORRECT ANSWER), incluindo a regra das **3 alternativas erradas** e o mapa de emojis
+
+Referência viva do formato final: `outputs/cards-enriquecidos-forms/001-enriched-card.md`.
+
+
+## Gerador de Reports (Etapa Automática e OBRIGATÓRIA)
 
 ### Quando Ativar
 
-Após **TODOS os 60 cards estarem completos** (ou ao final de uma execução onde todos os cards processados tiverem sucesso):
+**SEMPRE**, ao final de toda execução, assim que o **último `card-enricher-kids` da rodada**
+devolver `ENRICHED_KIDS NNN OK (FINAL)` e **não houver mais agentes em voo**.
+
+### O tamanho do deck é DERIVADO, nunca fixo
+
+O PDF contém **exatamente os cards enriquecidos que existirem no diretório** no momento do
+disparo. Não há número mágico:
+
+| Cards enriquecidos existentes | PDF gerado |
+|---|---|
+| 1 | PDF com 1 card (`Card 001/001`) |
+| 3 | PDF com 3 cards (`Card 001/003` … `003/003`) |
+| 15 (TSV tem 60 linhas, só 15 enriquecidas) | PDF com **15** cards — as 45 linhas não enriquecidas simplesmente não aparecem |
+| 15 (TSV tem **1000** linhas) | PDF com **15** cards — o tamanho do TSV não influencia em nada |
+| 60 | PDF com 60 cards |
+| N (todas as linhas do TSV) | PDF com N cards |
+| 0 | **não gera** — pula e loga |
+
+**`60` NÃO é limite nem meta.** O universo é `N = número de linhas de dados do TSV`, e o deck
+é o subconjunto `cards enriquecidos ⊆ N` já materializado.
+
+O **N do TSV não entra na conta do PDF** — ele só define quanto trabalho ainda resta. O deck
+é montado a partir dos arquivos em `outputs/cards-enriquecidos-forms/`, ponto. TSV com 60 ou
+1000 linhas e 15 cards enriquecidos produzem o mesmo PDF: 15 questões.
+
+**Única condição de pular:** o diretório `outputs/cards-enriquecidos-forms/` não contém
+nenhum `*-enriched-card.md` (não há o que reportar). Registrar isso no log.
 
 ```bash
-# Coordenador verifica:
-if [ $cards_completos -eq 60 ]; then
-    source .claude/skills/gerar-cards-enriquecidos-do-forms/logging_helper.sh
-    log_agent_dispatch "gerador-de-reports" "001-060"
-    
-    # Dispara agente
+# Coordenador, após o último ENRICHED_KIDS OK e com a fila de agentes vazia:
+source .claude/skills/gerar-cards-enriquecidos-do-forms/logging_helper.sh
+
+total_enriquecidos=$(ls outputs/cards-enriquecidos-forms/*-enriched-card.md 2>/dev/null | wc -l)
+
+if [ "$total_enriquecidos" -gt 0 ]; then
+    # faixa = primeiro..último card enriquecido REAL (ex: "001-001", "001-003", "001-060")
+    log_agent_dispatch "gerador-de-reports" "$faixa"
+
+    # Dispara SEMPRE — 1 card ou N cards, o gatilho é o mesmo
     spawn_agent("gerador-de-reports", cards_dir="outputs/cards-enriquecidos-forms/")
-    
-    # Aguarda
+
     wait_for_response("REPORT OK")
-    
-    log_agent_complete "gerador-de-reports" "001-060" "OK"
+
+    log_agent_complete "gerador-de-reports" "$faixa" "OK"
+else
+    log_info "Nenhum card enriquecido disponível — gerador-de-reports pulado"
 fi
 ```
+
+**Ordem correta das fases:** Fase 4 (report) acontece **antes** da Fase 5 (resumo final),
+para que o caminho do PDF possa ser incluído no resumo apresentado ao usuário.
+
+Se o agente responder `REPORT FAILED`, o coordenador registra a falha no log e segue para a
+Fase 5 — a falha do PDF **não** invalida os cards já enriquecidos.
 
 ### O Que Faz
 
@@ -459,7 +514,7 @@ O agente `gerador-de-reports` lê todos os `*-enriched-card.md` e gera:
 **Estrutura do PDF:**
 - Capa com metadata (data, total de cards)
 - Índice com todas as perguntas
-- 60 Cards formatados (pergunta EN + PT-BR + explicações + resposta)
+- Todos os cards disponíveis formatados (pergunta EN + PT-BR + explicações + resposta)
 - Rodapé com numeração de páginas
 
 ---
@@ -483,8 +538,13 @@ O agente `gerador-de-reports` lê todos os `*-enriched-card.md` e gera:
 16:57:14 Parser 002 iniciado...
 ... (cards 002 e 003)
 17:15:30 Kids Enricher 003 completo ✓
-17:15:30 ✅ PROCESSAMENTO CONCLUÍDO
-17:15:30 📊 Estatísticas:
+17:15:30 Disparando gerador de PDF...
+17:15:31 Report Generator iniciado...
+17:18:45 Report Generator completo ✓
+17:18:45 📄 PDF gerado: Report 15-08-2026 17:18:45.pdf
+17:18:45 📁 Localização: outputs/Report 15-08-2026 17:18:45.pdf
+17:18:45 ✅ PROCESSAMENTO CONCLUÍDO
+17:18:45 📊 Estatísticas:
   - Pulados por idempotência: 0
   - Cards enriquecidos nesta execução: 3
   - Falhas permanentes: 0
@@ -493,17 +553,10 @@ O agente `gerador-de-reports` lê todos os `*-enriched-card.md` e gera:
   - 001-enriched-card.md ✓
   - 002-enriched-card.md ✓
   - 003-enriched-card.md ✓
---- Execução concluída em 2026-08-15 17:15:30 ---
+--- Execução concluída em 2026-08-15 17:18:45 ---
 ```
 
-**Se todos os 60 cards estiverem completos, continua:**
-
-```
-17:15:30 Disparando gerador de PDF...
-17:15:31 Report Generator iniciado...
-17:18:45 Report Generator completo ✓
-17:18:45 📄 PDF gerado: Report 15-08-2026 17:18:45.pdf
-17:18:45 📁 Localização: outputs/Report 15-08-2026 17:18:45.pdf
-17:18:45 📊 Tamanho: ~2.5 MB (60 cards)
-```
+O bloco do gerador de PDF aparece em **todas** as execuções, logo após o último
+`Kids Enricher NNN completo ✓` — inclusive em rodadas parciais como esta (3 cards).
+O PDF consolida todos os `*-enriched-card.md` presentes no diretório, não só os da rodada.
 

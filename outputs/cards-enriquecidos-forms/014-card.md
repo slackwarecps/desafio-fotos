@@ -1,8 +1,0 @@
-Scenario: Your system extracts event metadata (date, location, organizer, `attendee_count`) from news articles using a JSON schema with all nullable fields. During evaluation, you observe the model frequently generates plausible but incorrect values for fields not mentioned in the article—for example, outputting "500" for `attendee_count` when the source contains no attendance information. What's the most effective way to reduce these false extractions?
-
----
-
-[ ] A - Add a post-processing step using a second LLM call to verify each extracted value exists in the source document.B.Add prompt instructions to return null for any field where information is not directly stated in the source.C.Make all schema fields required (non-nullable) with strict validation rules to ensure the model only outputs verifiable data.D.Upgrade to a more capable model tier with improved instruction-following to reduce hallucination tendencies.
-[ ] B - Add prompt instructions to return null for any field where information is not directly stated in the source.C.Make all schema fields required (non-nullable) with strict validation rules to ensure the model only outputs verifiable data.D.Upgrade to a more capable model tier with improved instruction-following to reduce hallucination tendencies.
-[ ] C - Make all schema fields required (non-nullable) with strict validation rules to ensure the model only outputs verifiable data.D.Upgrade to a more capable model tier with improved instruction-following to reduce hallucination tendencies.
-[ ] D - Upgrade to a more capable model tier with improved instruction-following to reduce hallucination tendencies.

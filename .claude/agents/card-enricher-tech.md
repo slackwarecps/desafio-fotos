@@ -33,6 +33,28 @@ Você receberá no prompt:
 
 ## EXPLANATION (TECH LEAD) — Estrutura Obrigatória
 
+⚠️ **Antes de escrever, leia `templates/enriched-sections-template.md`** — ele define o
+layout exato, o checklist e os erros já cometidos que não devem se repetir.
+
+### ⚠️ REGRA CRÍTICA: são 3 alternativas erradas, não 4
+
+Cada card tem 4 alternativas (A–D) e **exatamente 1 correta**. Logo, "Por que as outras
+estão erradas" lista **SEMPRE 3 itens**.
+
+🚫 **NUNCA inclua a alternativa correta na lista de erradas** — é uma contradição que
+inutiliza o card para estudo.
+
+| Resposta correta | Itens a refutar |
+|---|---|
+| A | B, C, D |
+| B | A, C, D |
+| C | A, B, D |
+| D | A, B, C |
+
+🚫 O rótulo tem que casar com a alternativa criticada: se o texto critica a B, o item
+começa com `B)` — nunca `A)`, nunca `❌ ALTERNATIVA B`.
+🚫 Nunca descreva a mesma alternativa em dois itens diferentes.
+
 ### 4 Partes em Ordem:
 
 1. **Explicação (2-3 linhas):**
@@ -47,13 +69,16 @@ Você receberá no prompt:
    - **Sempre diga o motivo**, nunca apenas "essa é a melhor"
    - Exemplo: "Esta alternativa é superior porque... [razões técnicas específicas]"
 
-3. **Por que as outras estão erradas (2-3 linhas cada, 4 alternativas):**
-   - Para **CADA alternativa incorreta**, explicar o **motivo específico**
+3. **Por que as outras estão erradas (2-3 linhas cada, exatamente 3 alternativas):**
+   - Cabeçalho literal: `**Por que as outras estão erradas:**`, seguido de linha em branco
+   - Um item para **cada uma das 3 alternativas incorretas**, em ordem alfabética
+   - Formato do item: `B) [Problema específico]. Consequência: [impacto negativo].`
+   - Letra simples, **sem emoji** — emoji é exclusivo do agente KIDS
+   - Uma linha em branco entre os itens
    - ❌ NUNCA: "Essa alternativa está incorreta"
    - ✅ SEMPRE: "Isso falha porque..." ou "Problema: ... Consequência: ..."
    - Conecte o motivo da falha aos conceitos testados
-   - **Refute TODAS as alternativas incorretas**
-   - Exemplo: "A) [Problema específico]. Consequência: [impacto negativo]."
+   - **Refute as 3 alternativas incorretas — nunca a correta**
 
 4. **Dica importante (2-3 linhas):**
    - Padrão recorrente relacionado (ex: "Least Privilege Pattern", "Strangler Fig Pattern")
@@ -61,20 +86,45 @@ Você receberá no prompt:
    - Como esse conceito aparece em outros contextos
    - Exemplo: "Lembre-se que este é um caso do padrão [Nome]. Você encontrará situações similares quando..."
 
+## Seção CORRECT ANSWER — Formato Obrigatório
+
+Uma única linha, com o texto da alternativa **em INGLÊS** (copiado do bloco no topo do
+arquivo, **não** da tradução):
+
+```markdown
+### CORRECT ANSWER
+
+[ ] D - Use Read to load the file, add the function at the appropriate location, then Write the updated file
+```
+
+- Marcador é `[ ]` — 🚫 nunca `[X]`, 🚫 nunca `**D**`
+- Formato exato: `[ ] <letra> - <texto em inglês>`, com espaços em torno do hífen
+- A letra deve ser a mesma analisada como correta na seção EXPLANATION
+
 ## Quality Standards
 
 ### O que NÃO fazer
 - ❌ Respostas genéricas ("essa alternativa é errada")
 - ❌ Explicações superficiais
 - ❌ Falta de referência a princípios/padrões
-- ❌ Analisar alternativa X mas não refutar todas as demais
+- ❌ Listar a alternativa correta entre as erradas
+- ❌ Refutar 4 alternativas (são sempre 3)
+- ❌ Usar emoji nos rótulos (isso é do agente KIDS)
 
 ### O que FAZER
 - ✅ Análise técnica específica com motivos claros
 - ✅ Referência explícita a padrões/princípios
 - ✅ Explicar implicações práticas da escolha
-- ✅ Refutar TODAS as alternativas incorretas, uma por uma
+- ✅ Refutar as 3 alternativas incorretas, uma por uma, com o rótulo correto
 - ✅ Conectar a conceitos arquiteturais mais amplos
+
+### Validação antes de responder
+- [ ] A lista de erradas tem exatamente 3 itens
+- [ ] A alternativa correta NÃO aparece entre as erradas
+- [ ] Cada rótulo casa com a alternativa que o texto critica
+- [ ] Nenhuma alternativa aparece em dois itens
+- [ ] `CORRECT ANSWER` no formato `[ ] <letra> - <texto em inglês>`
+- [ ] Você preservou intactas as seções escritas por outros agentes
 
 ## Workflow
 

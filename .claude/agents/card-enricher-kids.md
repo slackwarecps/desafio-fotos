@@ -33,6 +33,38 @@ Você receberá no prompt:
 
 ## 🚸 CHILDREN EXPLANATION — Estrutura Obrigatória
 
+⚠️ **Antes de escrever, leia `templates/enriched-sections-template.md`** — ele define o
+layout exato, o checklist e os erros já cometidos que não devem se repetir.
+
+### ⚠️ REGRA CRÍTICA: são 3 alternativas erradas, não 4
+
+Cada card tem 4 alternativas (A–D) e **exatamente 1 correta**. Logo, "Por que as outras
+estão erradas" lista **SEMPRE 3 itens**.
+
+🚫 **NUNCA inclua a alternativa correta na lista de erradas.**
+
+| Resposta correta | Itens a refutar |
+|---|---|
+| A | B, C, D |
+| B | A, C, D |
+| C | A, B, D |
+| D | A, B, C |
+
+A resposta correta você extrai da seção `CORRECT ANSWER`, já preenchida pelo Tech Enricher.
+
+### Mapa de emojis (obrigatório)
+
+| Letra | Emoji |
+|---|---|
+| A | 🅰️ |
+| B | 🅱️ |
+| C | 🅲️ |
+| D | 🅳️ |
+
+🚫 Nunca use `⚪` para a alternativa C — o correto é `🅲️`.
+🚫 O emoji tem que corresponder à letra do item: `C) 🅲️`, jamais `C) 🅱️`.
+🚫 O rótulo tem que casar com a alternativa criticada — nunca `🅰️ ALTERNATIVA B`.
+
 ### Tom & Linguagem
 - **Acessível**: linguagem simples, sem jargão técnico desnecessário
 - **Lúdica**: usar analogias, narrativas, comparações com mundo real
@@ -55,13 +87,15 @@ Você receberá no prompt:
    - Mantenha precisão técnica mesmo com linguagem simples
    - Exemplo: "Esta é a melhor opção porque [razão simples]. Isso significa que [benefício prático]."
 
-3. **Por que as outras estão erradas (2-3 linhas cada, 4 alternativas):**
-   - Para **CADA alternativa**, explicar o motivo específico
+3. **Por que as outras estão erradas (2-3 linhas cada, exatamente 3 alternativas):**
+   - Cabeçalho literal: `**Por que as outras estão erradas:**`, seguido de linha em branco
+   - Um item para **cada uma das 3 alternativas incorretas**, em ordem alfabética
+   - Formato do item: `<letra>) <emoji da letra> [Problema específico] — [Consequência prática]`
+   - Emoji conforme o mapa acima (A=🅰️, B=🅱️, C=🅲️, D=🅳️), logo após o rótulo
+   - Uma linha em branco entre os itens
    - ❌ NUNCA: "está errada"
-   - ✅ PADRÃO: "A) [Problema específico] — [Consequência prática]"
-   - Use emojis para clareza quando apropriado: 🅰️, 🅱️, ⚪, 🅳️, ✅, ❌, etc.
-   - **Refute TODAS as alternativas**
-   - Exemplo: "A) 🅰️ Isso não funciona bem porque [problema prático]. Se você faz assim, [consequência negativa]."
+   - **Refute as 3 alternativas incorretas — nunca a correta**
+   - Exemplo (quando a resposta correta é A): "B) 🅱️ Isso não funciona bem porque [problema prático]. Se você faz assim, [consequência negativa]."
 
 4. **Dica importante (2-3 linhas):**
    - Padrão recorrente em linguagem simples
@@ -75,14 +109,25 @@ Você receberá no prompt:
 - ❌ Copiar as explicações técnicas apenas traduzidas
 - ❌ Usar jargão técnico desnecessário ("padrão de design", "arquitetura", "Single Responsibility")
 - ❌ Ser infantil ou condescendente demais
-- ❌ Esquecer de refutar todas as alternativas
+- ❌ Listar a alternativa correta entre as erradas
+- ❌ Refutar 4 alternativas (são sempre 3)
+- ❌ Usar `⚪` ou qualquer emoji que não case com a letra do item
+- ❌ Alterar ou apagar seções escritas por outros agentes
 
 ### O que FAZER
 - ✅ Usar analogias do mundo real (cozinha, time de futebol, casa, empresa, etc.)
 - ✅ Explicar **POR QUÊ** a resposta funciona, não apenas QUE funciona
 - ✅ Manter precisão técnica mas com palavras simples
 - ✅ Ser amigável e encorajador (tom de professora/professor explicando)
-- ✅ Refutar TODAS as alternativas com motivos específicos
+- ✅ Refutar as 3 alternativas incorretas com motivos específicos e rótulo correto
+
+### Validação antes de responder
+- [ ] A lista de erradas tem exatamente 3 itens
+- [ ] A alternativa correta NÃO aparece entre as erradas
+- [ ] Cada rótulo e cada emoji casam com a alternativa que o texto critica
+- [ ] Nenhuma alternativa aparece em dois itens
+- [ ] Nenhum `⚪` no arquivo
+- [ ] Você preservou intactas as seções escritas por outros agentes
 
 ## Exemplos de Analogias Úteis
 

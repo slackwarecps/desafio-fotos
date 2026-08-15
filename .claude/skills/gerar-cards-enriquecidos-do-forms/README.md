@@ -1,6 +1,14 @@
-# Skill: Gerar Cards Enriquecidos a partir do Formulário TSV
+# Skill: Gerar Cards Enriquecidos a partir do Formulário TSV (Fluxo Multiagente)
 
-Automatiza a geração de flashcards enriquecidos a partir de perguntas armazenadas em `formulario.tsv` (export de Google Forms), com explicações estruturadas em dois níveis: técnico (Tech Lead) e acessível (Children Explanation).
+Automatiza a geração de flashcards enriquecidos a partir de perguntas armazenadas em `formularios/formulario.tsv` (export de Google Forms), usando um coordenador que orquestra **4 subagentes especializados** em um pipeline paralelo, com teto de 5 agentes simultâneos. 
+
+Pipeline de 4 agentes:
+1. **card-parser** → parseia pergunta + opções, cria card simples
+2. **card-translator** → traduz para PT-BR, cria seção TRANSLATED QUESTION
+3. **card-enricher-tech** → análise técnica, preenche EXPLANATION (TECH LEAD) + CORRECT ANSWER
+4. **card-enricher-kids** → explicação acessível, preenche 🚸 CHILDREN EXPLANATION
+
+Explicações estruturadas em **dois níveis**: técnico (Tech Lead) e acessível (Children Explanation).
 
 ## 🚀 Uso Rápido
 
@@ -28,30 +36,41 @@ Processa apenas as **próximas 3 perguntas novas** (útil para teste ou processa
 
 ---
 
-## 📋 Processo de Geração — Etapa Única Contínua
+## 📋 Processo de Geração — Pipeline Multiagente Paralelo de 4 Agentes
 
-⚠️ **Princípio Central:** Para cada pergunta, gerar **ambos os cards (simples + enriquecido)** em um fluxo único, sem pausas.
+⚠️ **Arquitetura:** Um coordenador orquestra **4 subagentes especializados** em um pipeline paralelo:
+- **Máximo 5 agentes simultâneos** (somados: parsers + translators + enrichers)
+- Cada pergunta passa por **4 estágios em sequência** (parser → translator → tech enricher → kids enricher), mas **perguntas diferentes rodam em paralelo**
+- Idempotência inteligente (AND): se ambos simple + enriched cards existem, pula completamente
 
-### Fluxo por Pergunta
+### Fluxo de Pipeline de 4 Agentes
 
 Para cada pergunta do TSV:
-1. **Verificar idempotência** — Se ambos os arquivos (simples + enriquecido) existem, PULAR
-2. **Parsear** — Extrair pergunta + 4 opções do texto bruto colado
-3. **Card Simples** — Criar `NNN-card.md` (pergunta + checkboxes)
-4. **Análise Técnica** — Determinar resposta correta
-5. **Card Enriquecido** — Criar `NNN-enriched-card.md` (análise completa)
-6. **Próxima Pergunta** — Sem pausas, repetir fluxo
+1. **Verificar idempotência (AND)** — Se **AMBOS** (simples + enriquecido) existem, PULAR completamente
+2. **Etapa 1 (se necessário): Parser** — `card-parser` extrai pergunta + 4 opções, cria `NNN-card.md`
+3. **Etapa 2: Translator** — `card-translator` traduz para PT-BR, cria seção `TRANSLATED QUESTION`, estrutura `NNN-enriched-card.md` com placeholders
+4. **Etapa 3: Tech Enricher** — `card-enricher-tech` analisa, determina resposta correta, preenche `EXPLANATION (TECH LEAD)` + `CORRECT ANSWER`
+5. **Etapa 4: Kids Enricher** — `card-enricher-kids` cria explicação acessível, preenche `🚸 CHILDREN EXPLANATION`
+6. **Card Completo** — Todas as 5 seções preenchidas: EN + PT-BR + Tech + Kids + Answer
+7. **Próxima Pergunta** — Enquanto pergunta N está no enricher de kids, pergunta N+1 pode estar no parser
 
-❌ **ERRADO:** Processar todos os simples, depois todos os enriquecidos
-✅ **CORRETO:** Simples → Enriquecido → Próxima Pergunta (ciclo completo)
+```
+Pergunta 001 → Parser (5s) → Translator (18s) → Tech Enricher (33s) → Kids Enricher (30s) → Completo! (86s)
+Pergunta 002 → (paralelo) → Parser (5s) → Translator (18s) → Tech Enricher (33s) → Kids Enricher (30s) → Completo! (86s)
+...
+```
+
+❌ **ERRADO:** Processar sequencialmente (uma pergunta inteira por vez na mesma sessão)
+✅ **CORRETO:** Paralelismo com especialização (4 agentes independentes, múltiplas perguntas em voo)
 
 ---
 
 ## 📁 Estrutura de Saída
 
 ```
-desafio-fotos/
-├── formulario.tsv                      # Arquivo fonte (Google Forms export)
+desafio-formularios/
+├── formularios/
+│   └── formulario.tsv                  # Arquivo fonte (Google Forms export)
 └── outputs/
     └── cards-enriquecidos-forms/       # ← Saída desta skill
         ├── 001-card.md                 # Card simples
@@ -62,7 +81,7 @@ desafio-fotos/
         └── 003-enriched-card.md
 ```
 
-**Nota:** Saída separada em `cards-enriquecidos-forms/` (não em `cards-enriquecidos/`, que é para fotos). Evita colisão de numeração.
+**Nota:** Entrada corrigida para `formularios/formulario.tsv` (não raiz). Saída separada em `cards-enriquecidos-forms/` (não em `cards-enriquecidos/`, que é para fotos). Evita colisão de numeração.
 
 ---
 
@@ -160,10 +179,40 @@ As questões testam conceitos de:
 
 ## ⚡ Características
 
-- ✅ Processamento **idempotente** — não sobrescreve cards já convertidos
-- ✅ **Limite configurável** — processe N perguntas por execução
-- ✅ **Numeração sequencial** — 001, 002, ..., 060 conforme ordem do TSV
+- ✅ **Multiagente paralelo de 4 agentes** — coordenador orquestra parser + translator + tech enricher + kids enricher, máx 5 simultâneos
+- ✅ **Especialização** — cada agente faz uma tarefa bem definida e reutilizável
+- ✅ **Pipeline de 4 etapas** — parse → translate → tech analysis → kids analysis
+- ✅ **Idempotência AND** — pula linha só se ambos os cards (simples + enriquecido) existem
+- ✅ **Criação incremental** — cada agente materializa progresso (cria/atualiza arquivo, não deixa em /tmp)
+- ✅ **Limite configurável** — processe N perguntas por execução (ou todas se sem argumento)
+- ✅ **Numeração sequencial** — 001, 002, ... conforme ordem do TSV (quantas linhas houver)
 - ✅ **Pasta dedicada** — output em `cards-enriquecidos-forms/`, separado de fotos
 - ✅ **Reproduzível** — mesmo input sempre gera mesma estrutura
+- ✅ **Retry inteligente** — tenta novamente uma vez em caso de falha antes de registrar permanente
+- ✅ **Agente de Reports** — `gerador-de-reports` roda SEMPRE ao final e gera PDF com deck-style formatting
 
-**Nenhuma ambiguidade. Nenhum problema. Apenas cards de qualidade.**
+**Pipeline paralelo de 4 agentes otimizado para geração em volume, sem tamanho fixo — processa quantas linhas o TSV tiver. Cada agente independente e reutilizável. Nenhuma ambiguidade. Apenas cards de qualidade.**
+
+---
+
+## 📄 Etapa Final Automática: Gerador de Reports
+
+O coordenador dispara o agente **`gerador-de-reports`** em **toda** execução, assim que o último
+`card-enricher-kids` termina (inclusive em rodadas parciais como `/gerar-cards-enriquecidos-do-forms 3`).
+Não é preciso invocá-lo manualmente. O PDF consolida **todos** os `*-enriched-card.md` do diretório,
+não apenas os cards daquela rodada:
+
+```bash
+# (interno) Agent(subagent_type="gerador-de-reports", cards_dir="outputs/cards-enriquecidos-forms/")
+# Gera: Report 15-08-2026 14:23:45.pdf
+```
+
+**Funcionalidades:**
+- ✅ Lista automaticamente todos os cards enriquecidos disponíveis
+- ✅ **Tamanho do deck derivado, nunca fixo** — 1 card enriquecido → PDF com 1 questão;
+  15 enriquecidos (mesmo que o TSV tenha 60 ou 1000 linhas) → PDF com 15 questões
+- ✅ Estrutura PDF profissional (capa, índice, cards, página final)
+- ✅ Timestamp automático no nome do arquivo
+- ✅ Formatação deck-style didático
+- ✅ Todas as 5 seções incluídas (EN + PT-BR + Tech + Kids + Answer)
+- ✅ Output: `outputs/Report dd-mm-yyyy hh:mm:ss.pdf`

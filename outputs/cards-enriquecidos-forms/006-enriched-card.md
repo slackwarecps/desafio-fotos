@@ -1,69 +1,67 @@
-Scenario: A customer raises three separate issues during one session: a refund inquiry (turns 1-15), a subscription question (turns 16-30), and a payment method update (turns 31-45). At turn 48, the customer asks "What happened with my refund?" The conversation is approaching context limits. What strategy best maintains the agent's ability to address all issues throughout the session?
+Scenario: An agent is dropped into an unfamiliar repository and asked to add a feature. The best way to orient without burning context is to:
 
 ---
 
-[ ] A - Extract and persist structured issue data (order IDs, amounts, statuses) into a separate context layer.
-[ ] B - Rely on MCP tools to re-fetch relevant information on demand when the customer references earlier issues.
-[ ] C - Summarize earlier turns into a narrative description, preserving full message history only for the active issue.
-[ ] D - Implement sliding window context that retains the most recent 30 turns.
+[ ] A - Load every file into context so nothing is missed.
+[ ] B - Read the entry points and project structure, then search for the area the feature touches.
+[ ] C - Start editing the first file that looks related.
+[ ] D - Ask the user to explain every file.
 
 ---
 
 ### TRANSLATED QUESTION
 
-Cenário: Um cliente levanta três issues separadas durante uma sessão: refund inquiry (turns 1-15), subscription question (turns 16-30), e payment method update (turns 31-45). No turn 48, cliente pergunta "E aí, o que aconteceu com meu refund?" A conversa está se aproximando dos limites de contexto. Qual estratégia melhor mantém a habilidade do agente de lidar com todas as issues durante a sessão?
+Cenário: Um agente é inserido em um repositório desconhecido e solicitado a adicionar um recurso. A melhor forma de se orientar sem consumir contexto é:
 
-Alternativas traduzidas:
-
-A) Extrair e persistir dados estruturados de issues (order IDs, valores, status) em uma camada de contexto separada.
-B) Confiar em MCP tools para re-buscar informação relevante sob demanda quando cliente referencia issues anteriores.
-C) Resumir turns anteriores em descrição narrativa, preservando histórico completo de mensagens apenas para a issue ativa.
-D) Implementar sliding window context que retém os últimos 30 turns.
+A) Carregar todos os arquivos no contexto para que nada seja perdido.
+B) Ler os pontos de entrada e a estrutura do projeto, depois procurar pela área que o recurso afeta.
+C) Começar a editar o primeiro arquivo que pareça relacionado.
+D) Pedir ao usuário para explicar cada arquivo.
 
 ---
 
 ### EXPLANATION (TECH LEAD)
 
-Explicação:
-A pergunta testa **context management em multi-issue conversations**. Cenário típico em customer support: contexto é limitado, mas você tem múltiplas issues não-relacionadas que o cliente menciona ao longo do tempo. Como você mantém rastreabilidade sem gastar tokens em histórico completo?
+**Explicação:**
+Esta pergunta testa o princípio de Strategic Exploration e Context Efficiency — como navegar em um repositório desconhecido sem desperdício de contexto. A questão sonda compreensão sobre a ordem correta de atividades: visão geral antes de detalhes, estrutura antes de implementação.
 
-Por que a alternativa A é a correta:
-Extrair e persistir structured issue data em camada separada é superior porque: (1) **Desacoplamento de conversação**: dados de issue (ID, status, contexto técnico) vivem independentemente da conversa — não competem por tokens com turn 48. (2) **Re-referência eficiente**: quando cliente pergunta "e meu refund?" no turn 48, você faz lookup estruturado (O(1) lookup: order ID → status) em vez de re-scanning histórico. (3) **Múltiplas issues simultaneamente**: você tem slots para refund, subscription, payment method — cada um independente. (4) **Escala**: padrão "structured data layer" permite lidar com 5, 10, 20 issues sem degradação de contexto. Isto é arquitetura padrão em sistemas reais: conversação é transitória, dados estruturados são fonte verdade.
+**Por que a alternativa B é a correta:**
+Esta alternativa é superior porque aplica o princípio de Least Privilege Informacional — começar com entry points (pontos de entrada naturais como main.py, __init__.py, routes/, config/) e estrutura de diretórios fornece compreensão de limites arquiteturais e dependências sem carregar todos os arquivos. Segue o padrão Progressive Disclosure: explora incrementalmente, localizando exatamente onde a feature toca o código. Permite decisões informadas sobre arquitetura, convenções e padrões existentes antes de qualquer modificação, reduzindo risco de violação de abstrações.
 
-Por que as outras estão erradas:
+**Por que as outras estão erradas:**
 
-B) Confiar em MCP tools para re-fetch é reativo — você já chamou `get_customer`, `lookup_order` nos turns 1-15. Re-fetching no turn 48 é redescoberta custosa. Além disso, MCP tools têm latência — block no turn 48 esperando resposta.
+A) Carregar todos os arquivos no contexto queima tokens rapidamente em repositórios grandes, deixando pouca memória/contexto justamente quando o agente precisa fazer análise profunda e integração de aprendizado. Ineficiente e desperdiçador.
 
-C) Resumir turns em narrativa é lossy compression — narrativa "the customer's refund is being processed" é mais vago que dado estruturado "refund_status: pending, expected_date: 2026-08-16". Quando cliente pergunta "quando chega?" no turn 48, você não tem a data exata — só tem narrativa genérica.
+C) Começar a editar o primeiro arquivo que pareça relacionado carrega risco de modificar código sem compreender padrões, dependências e convenções do projeto. Consequência: alterações podem quebrar abstrações, duplicar código existente ou violar convenções não documentadas.
 
-D) Sliding window retaining últimos 30 turns perde issue #1 (refund, turns 1-15). Turn 48 pergunta sobre refund, mas turns 1-15 foram dropados. Você perdeu contexto crítico. Sliding window é pior aqui.
+D) Pedir ao usuário para explicar cada arquivo é impraticável e desconsidera que um repositório bem estruturado já fornece contexto via entry points, nomes descritivos e organização de diretórios. Desperdício de tempo do usuário.
 
-Dica importante:
-Padrão recorrente: **structured state management outside conversation context**. Sempre que tem múltiplos issues, long conversations, ou re-referências, a resposta é "extrair estado estruturado para camada separada, não compressão lossy". Isto aparece em: CRM systems (customer data persists), incident management (issue registry), conversation bots (session state).
+**Dica importante:**
+Lembre-se que este é um caso do padrão "Entry Point Discovery" — você encontrará situações similares ao investigar qualquer novo sistema: sempre comece pelos arquivos de configuração, rotas (routes/, controllers/), ou funções main(). Este padrão conecta-se ao conceito maior de Codebase Comprehension: estrutura informa design, design informa onde fazer mudanças.
 
 ---
 
 ### 🚸 CHILDREN EXPLANATION
 
-Explicação:
-Imagina que você está ajudando um cliente que tem 3 problemas: quer refund de um produto, quer mudar a subscription, e quer atualizar forma de pagamento. Tudo numa longa conversa. Em algum ponto, você cansa de guardar TUDO na memória, quer esquecer o início pra lembrar só do agora. Como você não perde a informação?
+**Explicação:**
+Imagine que você chega em uma cidade desconhecida e precisa entregar um pacote em uma loja específica. A melhor estratégia não é explorar cada rua e beco (isso consome muito tempo e energia!). Em vez disso, você pergunta a um morador: "Onde fica o centro? Quais são as ruas principais?" Depois, você procura a loja no mapa que montou mentalmente. Um repositório de código funciona igual — você precisa do "mapa" antes de sair correndo por todas as "ruas".
 
-Por que a alternativa A é a correta:
-Em vez de tentar guardar toda a conversa na sua cabeça, você anota os dados importantes num **papel separado**: "Cliente X, refund ordem 123 → Status: em processamento. Subscription: plano pro. Payment: Visa terminado em 4321." Assim quando cliente pergunta "e meu refund?" mais tarde, você não precisa lembrar de 50 mensagens — só consulta o papel! Papel (dados estruturados) é pequeno e fácil de procurar.
+**Por que a alternativa B é a correta:**
+Esta é a melhor opção porque é como ler o mapa ANTES de explorar a cidade. Os "entry points" (arquivos como main.py, config/) são como as ruas principais e os sinais de trânsito. A estrutura do projeto é o mapa. Se você estuda isso primeiro, você descobre automaticamente aonde ir. Você entende onde estão os negócios (código), como tudo se conecta, e consegue encontrar exatamente o lugar que precisa modificar sem se perder.
 
-Por que as outras estão erradas:
+**Por que as outras estão erradas:**
 
-A) 🅰️ Pedir ao cliente pra chamar tools de novo é impraticável — cliente não pode chamar seu sistema, só você. E re-buscar é lento.
+A) 🅰️ Carregar todos os arquivos queima sua energia (contexto). É como tentar memorizar cada rua, cada esquina e cada prédio da cidade de uma vez — você fica cansado e acaba não sabendo por onde começar a entregar o pacote.
 
-C) 🅲️ Resumir tudo em narrativa é como tentar condensar 50 mensagens num texto "o cliente tinha vários problemas". Muito vago! Quando pergunta "e meu refund?", você não tem número, status, nada concreto.
+C) 🅲️ Começar a editar sem entender o projeto é perigoso. É como entrar na primeira loja que você vê e começar a mexer nas coisas sem saber como a loja funciona — você pode quebrar algo importante ou duplicar o trabalho de alguém.
 
-D) 🅳️ Lembrar só dos últimos 30 mensagens é como esquecer tudo que aconteceu nos primeiros 15 turns — e se a pergunta sobre refund aparece no turn 48? Você esqueceu tudo sobre refund!
+D) 🅳️ Pedir ao usuário para explicar cada arquivo não funciona bem porque repositórios bem organizados já contam a história por si: nomes descritivos, pastas estruturadas. Você aprende lendo sozinho — o usuário não precisa ser seu guia pessoal!
 
-Dica importante:
-Quando você tem conversa longa com múltiplos assuntos, **anote os dados importantes num lugar à parte** — tipo planilha com status de cada coisa. Não tente guardar tudo na conversa!
+**Dica importante:**
+Lembre-se: sempre que você chegar em um lugar novo (um repositório, um projeto, uma empresa), comece pelo MAPA — pergunte pela estrutura, pontos de entrada, limites principais. Este padrão funciona para tudo: aprender um novo videogame, entender como uma casa é organizada, ou navegar em um novo idioma. Estrutura primeiro, detalhes depois!
 
 ---
 
 ### CORRECT ANSWER
 
-[ ] A - Extract and persist structured issue data (order IDs, amounts, statuses) into a separate context layer.
+[ ] B - Read the entry points and project structure, then search for the area the feature touches.

@@ -1,0 +1,5 @@
+# Execution logs (local, not versioned)
+desafio.log
+
+# System
+.DS_Store

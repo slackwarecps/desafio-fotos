@@ -4,63 +4,64 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Desafio Fotos** is a system for creating enriched flashcards for Spaced Repetition Systems (SRS) from photographic questions/scenarios. The primary workflow involves extracting multiple-choice questions from images, creating basic cards, then enriching them with Portuguese translations, technical explanations, and analysis of answer choices.
+**Desafio Formulários** is a system for creating enriched flashcards for Spaced Repetition Systems (SRS) from form-based questions/scenarios. The primary workflow involves parsing multiple-choice questions from a TSV export, creating basic cards, then enriching them with Portuguese translations, technical explanations, and analysis of answer choices.
+
+## Quick Start
+
+The primary workflow is generating enriched flashcards from a Google Forms export:
+
+```bash
+/gerar-cards-enriquecidos-do-forms          # Process all pending questions
+/gerar-cards-enriquecidos-do-forms 3        # Process only next 3 questions
+```
+
+Expected flow:
+1. Questions from `formularios/formulario.tsv` → 4-agent pipeline → enriched cards in `outputs/cards-enriquecidos-forms/`
+2. Export all enriched cards to PDF: `/exporta-cards-enriquecidos-para-pdf` (or use gerador-de-reports agent)
+3. Export all enriched cards to EPUB: `/exporta-cards-enriquecidos-para-epub`
 
 ## Core Workflow
 
-### Two Sources for Flashcards
+### Input File Structure
 
-The system supports **two input sources** for generating enriched cards:
+**Location:** `formularios/formulario.tsv` (Google Forms export)
+- **Structure:** TSV with 60 rows of questions + options (concatenated inline)
+- **Columns:**
+  - Column 1: Timestamp
+  - Column 2: `perguntaRaw` — raw question text with 4 answer options (no separator)
+  - Column 3: Sequential index 1–60 (NOT the answer key)
 
-1. **Photos** (`.png`, `.jpg`) → processed by `/gerar-cards-enriquecidos`
-   - Input folder: `cards/`
-   - Output folder: `outputs/cards-enriquecidos/`
+**Card Numbering:** Row N in TSV → `NNN-card.md` and `NNN-enriched-card.md` (001–060)
 
-2. **Google Forms Export** (`formulario.tsv`) → processed by `/gerar-cards-enriquecidos-do-forms`
-   - Input file: `formulario.tsv` (root of repo)
-   - Output folder: `outputs/cards-enriquecidos-forms/`
+### Card Generation from Forms (Multiagent Pipeline)
 
-### Card Generation from Photos
-
-Place new question photos in `cards/` directory with any filename pattern (Screenshots, Captures, etc.). The skill handles renaming automatically.
-
-Invoke the skill:
+For questions stored in `formularios/formulario.tsv` (Google Forms export), invoke the skill:
 ```bash
-/gerar-cards-enriquecidos
+/gerar-cards-enriquecidos-do-forms           # Process all pending questions
+/gerar-cards-enriquecidos-do-forms 3         # Process only next 3 new questions
 ```
 
-This skill automates the entire enrichment pipeline for each photo:
-- Extracts question text and four answer options (A, B, C, D)
-- Generates `NNN-card.md` (basic card with original English text and options)
-- Generates `NNN-enriched-card.md` with:
-  - Portuguese translation of question and options
-  - Technical explanation section explaining the tested concept/pattern
-  - Detailed analysis of why the correct answer is correct
-  - Individual analysis of why each incorrect option is wrong
-  - Pattern/concept guidance ("Dica importante")
-  - Marked correct answer
-
-### Card Generation from Forms
-
-For questions stored in `formulario.tsv` (Google Forms export), invoke the skill:
-```bash
-/gerar-cards-enriquecidos-do-forms 3    # Process next 3 questions
-# or
-/gerar-cards-enriquecidos-do-forms      # Process all pending questions
-```
-
-This skill automates text parsing and card generation for each form entry:
-- Parses the concatenated question/options text into separate fields
-- Generates the same `NNN-card.md` and `NNN-enriched-card.md` pair as the photo skill
+This skill uses a **multiagent pipeline with 4 specialized agents** to automate card generation:
+- **Coordinator** orchestrates 4 subagents in parallel pipeline (max 5 simultaneous agents)
+  1. **card-parser** — Parses TSV rows, creates simple cards (`NNN-card.md`)
+  2. **card-translator** — Translates to PT-BR, creates enriched card structure with `TRANSLATED QUESTION` section
+  3. **card-enricher-tech** — Technical analysis, fills `EXPLANATION (TECH LEAD)` + `CORRECT ANSWER` sections
+  4. **card-enricher-kids** — Accessible explanation, fills `🚸 CHILDREN EXPLANATION` section
+- Each question passes through 4 stages sequentially, but **different questions run in parallel**
 - Output stored separately in `outputs/cards-enriquecidos-forms/` to avoid numbering conflicts
-- Supports idempotent processing and configurable batch sizes
+- Supports idempotent processing (AND rule: skips only if both simple and enriched files exist) and configurable batch sizes
+
+**Mandatory 5th Agent (always runs at the end):**
+5. **gerador-de-reports** — Dispatched automatically by the coordinator as soon as the last `card-enricher-kids` of the run finishes, on every execution (including partial batches). Generates a PDF report from all enriched cards in the output directory with deck-style formatting, TOC, and timestamp filename.
 
 ## Card Formats
 
 ### Simple Card (NNN-card.md)
 ```markdown
-[Original Question in English]
+Scenario: [Original Question in English]
+
 ---
+
 [ ] A - [Option A]
 [ ] B - [Option B]
 [ ] C - [Option C]
@@ -100,41 +101,170 @@ Generates enriched flashcards from photos automatically.
 - `.claude/skills/gerar-cards-enriquecidos/README.md` — Detailed instructions
 
 ### `/gerar-cards-enriquecidos-do-forms`
-Generates enriched flashcards from questions stored in `formulario.tsv` (Google Forms export).
-- **Input**: `formulario.tsv` (TSV file with 60 questions + options concatenated inline)
-- **Process**: Parse → Extract → Create simple + enriched cards (with optional limit on quantity)
+Generates enriched flashcards from `formularios/formulario.tsv` using a **4-agent parallel pipeline**.
+- **Input**: `formularios/formulario.tsv` (TSV with 60 questions + options concatenated inline)
+- **Process**: Coordinator orchestrates 4 specialized subagents in a pipeline (max 5 simultaneous agents):
+  1. **card-parser** — Extracts question + 4 options → creates `NNN-card.md`
+  2. **card-translator** — Translates to PT-BR → fills `TRANSLATED QUESTION` section
+  3. **card-enricher-tech** — Technical deep-dive → fills `EXPLANATION (TECH LEAD)` + `CORRECT ANSWER`
+  4. **card-enricher-kids** — Accessible explanation → fills `🚸 CHILDREN EXPLANATION` section
 - **Output**: `NNN-card.md` and `NNN-enriched-card.md` files in `outputs/cards-enriquecidos-forms/`
-- **Features**: Automatic text parsing, dual-level explanations, idempotent processing, configurable batch size
+- **Pipeline Logic**: Each question passes through all 4 stages sequentially, but different questions run in parallel
+- **Features**: 
+  - Parallel processing (max 5 agents simultaneous)
+  - Idempotent with AND rule (skips only if BOTH simple + enriched cards exist)
+  - Configurable batch size (process N questions per invocation)
+  - Self-contained cards with dual-level explanations
 
-**Documentation:**
-- `.claude/skills/gerar-cards-enriquecidos-do-forms/SKILL.md` — Detailed workflow
-- `.claude/skills/gerar-cards-enriquecidos-do-forms/README.md` — Quick start guide
+**Subagents (in `.claude/agents/`):**
+- `card-parser.md` — Parses TSV rows into simple cards
+- `card-translator.md` — Translates to PT-BR with `TRANSLATED QUESTION` section
+- `card-enricher-tech.md` — Technical analysis, fills `EXPLANATION (TECH LEAD)` + `CORRECT ANSWER`
+- `card-enricher-kids.md` — Accessible explanation, fills `🚸 CHILDREN EXPLANATION`
+
+**Mandatory Report Agent (final stage of every run):**
+- `gerador-de-reports.md` — Generates PDF report from all enriched cards
+
+**Skill Documentation:**
+- `.claude/skills/gerar-cards-enriquecidos-do-forms/SKILL.md` — Detailed workflow and coordinator logic
+- `.claude/skills/gerar-cards-enriquecidos-do-forms/README.md` — Quick start and usage guide
 
 **Usage:**
-```
+```bash
 /gerar-cards-enriquecidos-do-forms          # Process all pending questions
 /gerar-cards-enriquecidos-do-forms 3        # Process only next 3 new questions
 ```
 
 ### `/exporta-cards-enriquecidos-para-pdf`
-Consolidates all enriched cards into a single PDF deck.
-- **Input**: All `NNN-enriched-card.md` files
+Consolidates all enriched cards (`NNN-enriched-card.md`) into a single PDF deck.
+- **Input**: All enriched card files from `outputs/cards-enriquecidos-forms/`
 - **Process**: Extract → Consolidate → Format → Export to PDF
-- **Output**: `flashcards-deck-[DATE].pdf`
-- **Features**: Deck-style formatting, numbered pages, indexed content
+- **Output**: `flashcards-deck-[DATE].pdf` in `outputs/`
+- **Features**: Deck-style formatting, table of contents, numbered pages, UTF-8 support
+
+**Recommended Alternative:** Use the `gerador-de-reports` agent for timestamp-based filenames (`Report dd-mm-yyyy hh:mm:ss.pdf`) with enhanced formatting.
 
 **Documentation:**
 - `.claude/skills/exporta-cards-enriquecidos-para-pdf/SKILL.md` — Overview
 - `.claude/skills/exporta-cards-enriquecidos-para-pdf/README.md` — Detailed instructions
-- `.claude/skills/exporta-cards-enriquecidos-para-pdf/EXEMPLO-SAIDA.md` — Example output format
+
+### `/exporta-cards-enriquecidos-para-epub`
+Converts all enriched cards into an EPUB e-book compatible with Google Play Books and other e-readers.
+- **Input**: All enriched card files from `outputs/cards-enriquecidos-forms/`
+- **Process**: Extract → Format → Package EPUB → Deploy to e-readers
+- **Output**: `flashcards-deck-[DATE].epub` in `outputs/`
+- **Features**: Mobile-friendly format, compatible with Google Play Books and Kindle, table of contents, UTF-8 support
+
+**Documentation:**
+- `.claude/skills/exporta-cards-enriquecidos-para-epub/SKILL.md` — Overview
+- `.claude/skills/exporta-cards-enriquecidos-para-epub/README.md` — Detailed instructions
+
+## Project Structure
+
+```
+desafio-formularios/
+├── .claude/
+│   ├── agents/              # Specialized agent definitions (4-agent pipeline)
+│   │   ├── card-parser.md
+│   │   ├── card-translator.md
+│   │   ├── card-enricher-tech.md
+│   │   ├── card-enricher-kids.md
+│   │   └── gerador-de-reports.md
+│   ├── skills/              # Skill implementations
+│   │   ├── gerar-cards-enriquecidos-do-forms/  # Main workflow
+│   │   ├── exporta-cards-enriquecidos-para-pdf/
+│   │   └── exporta-cards-enriquecidos-para-epub/
+│   └── settings.local.json  # Pre-approved permissions for file/script operations
+├── formularios/             # Input directory
+│   └── formulario.tsv       # Google Forms export (60 questions)
+├── outputs/
+│   ├── cards-enriquecidos-forms/  # Generated simple + enriched cards
+│   └── *.pdf / *.epub       # Exported decks
+├── templates/               # Example card formats
+└── README.md                # Main documentation
+```
+
+## Commands & Tools
+
+### Development Environment
+
+The project uses **Python 3** for PDF/EPUB generation scripts located in `.claude/skills/`:
+
+```bash
+# View installed Python version
+python3 --version
+
+# Skills that use Python:
+# - exporta-cards-enriquecidos-para-pdf/exporta.py
+# - exporta-cards-enriquecidos-para-epub/exporta.py
+```
+
+### Common Workflow Commands
+
+```bash
+# Generate enriched cards (main workflow)
+/gerar-cards-enriquecidos-do-forms          # Process all pending questions
+/gerar-cards-enriquecidos-do-forms 5        # Process next 5 questions (batch)
+
+# Export to PDF
+/exporta-cards-enriquecidos-para-pdf        # Create PDF deck
+
+# Export to EPUB (e-reader format)
+/exporta-cards-enriquecidos-para-epub       # Create EPUB deck
+
+# Generate PDF with enhanced formatting (alternative)
+# Invoke the gerador-de-reports agent directly for timestamp-based output
+```
+
+### Git Workflow
+
+```bash
+# View recent changes
+git status
+git log --oneline -10
+
+# The project uses gitemoji and Portuguese commit messages
+# Example: "✨ feat(skill-name): description in Portuguese"
+```
+
+## Troubleshooting
+
+### Issue: "No pending questions to process"
+**Cause:** All questions in TSV have been converted (both simple + enriched cards exist)
+**Solution:** Check `outputs/cards-enriquecidos-forms/` to verify card count matches TSV rows
+
+### Issue: Partial card generation (only simple cards, no enriched)
+**Cause:** Generation was interrupted between parser and enricher stages
+**Solution:** Rerun `/gerar-cards-enriquecidos-do-forms` — the AND rule will skip simple cards and continue enrichment
+
+### Issue: TSV file not found
+**Cause:** `formularios/formulario.tsv` is missing or misplaced
+**Solution:** Ensure file exists at project root in `formularios/` subdirectory
+
+### Issue: PDF/EPUB export is empty
+**Cause:** No enriched cards exist in output directory
+**Solution:** First run `/gerar-cards-enriquecidos-do-forms` to generate cards, then export
+
+### Issue: Python script errors during export
+**Cause:** Missing Python dependencies or encoding issues
+**Solution:** 
+- Ensure Python 3.8+ is installed
+- Check that enriched cards are valid UTF-8 encoded Markdown
+- Review `.claude/settings.local.json` for script execution permissions
 
 ## Key References
 
 - **README.md**: Complete workflow documentation
-- **USAR_SKILL.md**: Interactive usage guide
-- **`templates/`**: Example cards and deck format
-- **`EXAMPLE-enriched-card-new-format.md`**: Card example with both explanation levels
-- **`templates/deck-exemplo.md`**: PDF deck format template
+- **`templates/`**: Example card formats and canonical format templates
+  - `001-card.md` — Simple card structure
+  - `001-enriched-card.md` — Full enriched card structure (living reference for the final format)
+  - `translated-card-template.md` — Canonical layout for the **translator** stage; the
+    `card-translator` agent must read this before writing
+  - `enriched-sections-template.md` — Canonical layout for the **enricher** stages (TECH,
+    KIDS, CORRECT ANSWER), including the "exactly 3 wrong options" rule and the letter→emoji
+    map; both `card-enricher-tech` and `card-enricher-kids` must read this before writing
+- **`.claude/skills/gerar-cards-enriquecidos-do-forms/README.md`** — Quick start guide
+- **`.claude/skills/gerar-cards-enriquecidos-do-forms/SKILL.md`** — Detailed technical workflow
 
 ## Certification Context
 
@@ -142,6 +272,7 @@ The skill is designed around patterns from **Claude Certified Architect – Foun
 - Claude Models and capabilities
 - Prompt engineering and advanced techniques
 - Agentic systems and tool use
+- Agents and multiagent coordination
 - Vision and document handling
 - Best practices and design patterns
 - Trade-offs in system architecture
@@ -151,27 +282,78 @@ Cards focus on architecture decisions, design patterns, and engineering principl
 
 ## Development Notes
 
-### Skill Invocation
-When the user runs `/gerar-cards-enriquecidos`:
+### Multiagent Architecture for `/gerar-cards-enriquecidos-do-forms`
 
-**Phase 1: Photo Detection & Renaming**
-1. Detect all image files (*.png, *.jpg) in the current directory
-2. Rename non-standard files to `foto-001.png`, `foto-002.png`, etc. (sorted by modification date)
-3. Report renamed files
+The coordinator skill orchestrates a **4-stage sequential pipeline** where each question passes through all stages, but different questions run in parallel.
 
-**Phase 2: Card Generation** (for each photo in order)
-4. Read the image and extract question + 4 options (A, B, C, D)
-5. Create simple card (`NNN-card.md`) with English text only
-6. Analyze the question and determine correct answer based on technical merit
-7. Create enriched card (`NNN-enriched-card.md`) with:
-   - Translated question and options in Portuguese
-   - **EXPLANATION (TECH LEAD)**: Deep technical explanation using architecture patterns/design principles
-   - **SIMPLE EXPLANATION**: Accessible explanation suitable for beginners/learners
-   - **CORRECT ANSWER**: Marked letter
+**Pipeline Stages:**
 
-**Phase 3: Summary**
-8. List all cards created
-9. Confirm success
+1. **Parsing (card-parser)**
+   - Input: Raw TSV row with concatenated question + options
+   - Task: Extract question and 4 options (A, B, C, D), create simple card
+   - Output: `NNN-card.md` file + status signal
+
+2. **Translation (card-translator)**
+   - Input: Path to simple card (`NNN-card.md`)
+   - Task: Translate to PT-BR, create `TRANSLATED QUESTION` section
+   - Output: Intermediate state + status signal
+
+3. **Technical Enrichment (card-enricher-tech)**
+   - Input: Partially enriched card
+   - Task: Deep technical analysis, fill `EXPLANATION (TECH LEAD)` + `CORRECT ANSWER` sections
+   - Output: Intermediate state + status signal
+
+4. **Accessible Explanation (card-enricher-kids)**
+   - Input: Nearly complete card
+   - Task: Create `🚸 CHILDREN EXPLANATION` section with accessible language
+   - Output: Finalized `NNN-enriched-card.md` + status signal
+
+5. **PDF Report (gerador-de-reports)** — always runs, once per execution
+   - Trigger: the last `card-enricher-kids` of the run returns `ENRICHED_KIDS NNN OK (FINAL)` and no agents remain in flight
+   - Input: `cards_dir` = `outputs/cards-enriquecidos-forms/`
+   - Task: Consolidate **every** `*-enriched-card.md` present in the directory (not only this run's) into a PDF
+   - **Deck size is derived, never fixed:** the PDF holds exactly as many questions as there are enriched cards — 1 enriched card yields a 1-question PDF; 15 enriched cards yield a 15-question PDF whether the TSV has 60 rows or 1000. The TSV row count never enters this calculation
+   - Output: `outputs/Report dd-mm-yyyy hh:mm:ss.pdf` + `REPORT NNN-NNN OK <path>` status signal
+   - Skipped only when the directory has no enriched cards at all; a `REPORT FAILED` is logged and does not invalidate the generated cards
+
+**Concurrency Model:**
+- Coordinator maintains a queue of work items (questions to process)
+- Each question passes through all 4 stages sequentially
+- **Multiple questions are processed in parallel** with concurrency ceiling of **5 simultaneous agents**
+- When an agent completes, coordinator checks status signals and dispatches next work item
+- Different questions can be in different pipeline stages simultaneously
+
+**Idempotency (AND Rule):**
+- A question is skipped entirely only if **BOTH** `NNN-card.md` AND `NNN-enriched-card.md` exist
+- If only the simple card exists, coordinator continues from the translation stage
+- If partially enriched cards exist, coordinator resumes enrichment
+- Protects against reprocessing while allowing partial completion recovery
+
+### Subagent Definitions (in `.claude/agents/`)
+
+#### card-parser.md
+**Responsibility:** Parse raw TSV row into a simple flashcard
+- **Input:** `card_number` (e.g., "001"), `raw_text` (concatenated question + options)
+- **Output:** Writes `outputs/cards-enriquecidos-forms/NNN-card.md`
+- **Status:** Returns structured status line (`PARSED NNN OK <path>` or `PARSED NNN FAILED <reason>`)
+
+#### card-translator.md
+**Responsibility:** Translate simple card to PT-BR and create enriched card structure
+- **Input:** `card_number` (e.g., "001"), `card_path` (path to NNN-card.md)
+- **Output:** Writes `outputs/cards-enriquecidos-forms/NNN-enriched-card.md` with `TRANSLATED QUESTION` section
+- **Status:** Returns structured status line
+
+#### card-enricher-tech.md
+**Responsibility:** Provide technical deep-dive analysis and correct answer
+- **Input:** `card_number`, enriched card with translations
+- **Output:** Fills `EXPLANATION (TECH LEAD)` and `CORRECT ANSWER` sections
+- **Status:** Returns structured status line
+
+#### card-enricher-kids.md
+**Responsibility:** Provide accessible, ludic explanation for learners
+- **Input:** `card_number`, enriched card with technical explanation
+- **Output:** Fills `🚸 CHILDREN EXPLANATION` section
+- **Status:** Returns structured status line (signals completion)
 
 ### Output Quality Standards
 
@@ -183,12 +365,12 @@ When the user runs `/gerar-cards-enriquecidos`:
 - Maintain technical precision and professional tone
 - Structure: Context → Correct answer analysis → Wrong options analysis → Pattern insight
 
-#### SIMPLE EXPLANATION
+#### 🚸 CHILDREN EXPLANATION
 - Use plain language without sacrificing accuracy
 - Explain concept as if teaching a beginner/learner (accessible but not childish)
 - Focus on WHY the correct answer works
 - Address common misconceptions in wrong options
-- Use analogies and practical examples when helpful
+- Use analogies, emojis (where appropriate), and practical examples
 - Structure: Simple concept → Why correct → Why others don't work → Key takeaway
 
 #### General Standards
@@ -197,5 +379,31 @@ When the user runs `/gerar-cards-enriquecidos`:
 - Cards are self-contained educational units for SRS
 - Both explanation levels should complement each other (different audience, not repetition)
 
+### Agents vs. Skills
+
+**Skills** (in `.claude/skills/`) are user-invocable commands that coordinate the workflow:
+- `/gerar-cards-enriquecidos-do-forms` — Coordinator skill that orchestrates the pipeline
+- `/exporta-cards-enriquecidos-para-pdf` — Skill that consolidates cards into PDF
+- `/exporta-cards-enriquecidos-para-epub` — Skill that consolidates cards into EPUB
+
+**Agents** (in `.claude/agents/`) are specialized workers spawned by skills:
+- Each agent has a focused responsibility (parse, translate, enrich)
+- Agents communicate status signals back to the coordinator skill
+- Agents run in parallel but are subject to the 5-agent concurrency limit
+- Agents are not directly invoked by users; they're coordinated by skills
+
+**How they work together:**
+1. User invokes skill: `/gerar-cards-enriquecidos-do-forms`
+2. Skill reads input file and determines which questions need processing
+3. Skill spawns agents in waves (respecting 5-agent ceiling)
+4. Each question passes through: parser → translator → tech-enricher → kids-enricher
+5. Agents write output files and return status signals
+6. Coordinator monitors status and queues next batch
+7. Skill completes when all questions processed
+
 ### Permissions Note
-The `.claude/settings.local.json` file contains pre-approved permissions for file renaming operations with `chmod`, `mv`, and `rm` commands for the flashcard workflow.
+The `.claude/settings.local.json` file contains pre-approved permissions for:
+- File operations (read/write in `outputs/`, `formularios/`)
+- Python script execution (for PDF/EPUB generation)
+- Git operations (for commit tracking and status)
+- Agent spawning (for multiagent pipeline orchestration)
