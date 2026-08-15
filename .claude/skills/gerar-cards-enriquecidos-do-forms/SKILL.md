@@ -442,6 +442,8 @@ Cada linha abaixo é impressa no chat **E** gravada em `desafio.log` (exatamente
   (bloco EN intacto + `Cenário:` + opções `A)`–`D)`)
 - `templates/enriched-sections-template.md` — Layout canônico das etapas dos **enrichers**
   (TECH, KIDS e CORRECT ANSWER), incluindo a regra das **3 alternativas erradas** e o mapa de emojis
+- `templates/pdf-report-template.md` — Layout canônico do **PDF** (fonte única, lida tanto pelo
+  agente `gerador-de-reports` na Fase 4 quanto pela skill `/exporta-cards-enriquecidos-para-pdf`)
 
 Referência viva do formato final: `outputs/cards-enriquecidos-forms/001-enriched-card.md`.
 

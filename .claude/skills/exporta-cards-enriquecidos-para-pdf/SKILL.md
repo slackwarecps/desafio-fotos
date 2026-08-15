@@ -13,10 +13,24 @@ Consolida todos os cards enriquecidos (NNN-enriched-card.md) em um único arquiv
 /exporta-cards-enriquecidos-para-pdf
 ```
 
+## Template Canônico (leitura obrigatória)
+
+O layout do PDF é definido **exclusivamente** por:
+
+**`templates/pdf-report-template.md`**
+
+Leia esse arquivo **antes** de gerar qualquer PDF. Ele é a fonte única compartilhada com o agente
+`gerador-de-reports` (Fase 4 do pipeline), garantindo que o PDF automático e o exportado
+manualmente tenham layout idêntico. Para mudar o layout, edite o template — nunca esta skill.
+
+O template também define a regra do tamanho do deck: o PDF contém **exatamente** os cards
+enriquecidos existentes no diretório (1 card → deck de 1; 15 cards → deck de 15), independente
+de quantas linhas o `formulario.tsv` tenha.
+
 ## Processo Automático
 
 1. **Detectar Cards Enriquecidos**
-   - Encontra todos os arquivos `NNN-enriched-card.md` na pasta `/Users/fabioalvaropereira/Desktop/desafio-fotos/outputs/cards-enriquecidos/`
+   - Encontra todos os arquivos `NNN-enriched-card.md` em `outputs/cards-enriquecidos-forms/`
    - Ordena por número (001, 002, 003, ...)
 
 2. **Extrair Conteúdo**
@@ -90,11 +104,14 @@ Páginas 3+: Questões (alternadas com respostas)
 
 ## Referência
 
-Base de formatação:
-- `/Users/fabioalvaropereira/Desktop/desafio-fotos/templates/deck-exemplo.md`
+Base de formatação (**fonte única — leitura obrigatória**):
+- `templates/pdf-report-template.md`
 
 Cards de entrada:
-- `/Users/fabioalvaropereira/Desktop/desafio-fotos/outputs/cards-enriquecidos/NNN-enriched-card.md`
+- `outputs/cards-enriquecidos-forms/NNN-enriched-card.md`
 
 Output:
-- `/Users/fabioalvaropereira/Desktop/desafio-fotos/outputs/flashcards-deck-[DATA].pdf`
+- `outputs/flashcards-deck-[DATA].pdf`
+
+Consumidor irmão do mesmo template:
+- `.claude/agents/gerador-de-reports.md` — gera `outputs/Report dd-mm-yyyy hh:mm:ss.pdf` na Fase 4 do pipeline

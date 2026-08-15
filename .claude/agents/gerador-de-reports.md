@@ -62,107 +62,12 @@ Para cada card enriquecido encontrado (em ordem):
 
 ### Passo 3: Estruturar Documento PDF
 
-Crie um PDF com a seguinte estrutura:
+**LEITURA OBRIGATÓRIA antes de escrever qualquer linha de código:**
+`templates/pdf-report-template.md` — é a **fonte única** do layout do PDF (capa, índice,
+página de card, página final, mapa seção→bloco e padrões de formatação).
 
-**Página de Capa:**
-```
-╔══════════════════════════════════════════╗
-║                                          ║
-║      FLASHCARDS DECK - ENRIQUECIDOS     ║
-║                                          ║
-║         Claude Certified Architect       ║
-║           Foundations Certification      ║
-║                                          ║
-║     Generated: [dd/mm/yyyy hh:mm:ss]    ║
-║     Total Cards: [NNN]                   ║
-║                                          ║
-╚══════════════════════════════════════════╝
-```
-
-**Índice / Table of Contents:**
-```
-ÍNDICE DE PERGUNTAS
-
-001 - Your agent needs to insert a new helper function...
-002 - A user asks a support agent for specific legal advice...
-003 - An engineer who just joined the team asks...
-004 - What is the primary difference between...
-005 - When implementing a multi-step workflow...
-...
-```
-
-**Cards (um por página ou agrupados):**
-
-Para cada card:
-```
-╔════════════════════════════════════════════════════════════╗
-║  Card 001/[TOTAL ENCONTRADO]                     Página 2  ║
-╚════════════════════════════════════════════════════════════╝
-
-PERGUNTA (ENGLISH):
-Your agent needs to insert a new helper function into the 
-middle of a 150-line utility module...
-
-OPTIONS:
-[ ] A - Use Edit with an extremely long `old_string`...
-[ ] B - Use Edit's `replace_all` parameter...
-[ ] C - Use Bash to append the function definition...
-[ ] D - Use Read to load the file, add the function...
-
-─────────────────────────────────────────────────────────────
-
-PERGUNTA (PORTUGUÊS):
-Seu agente precisa inserir uma nova função auxiliar no meio 
-de um módulo utilitário de 150 linhas...
-
-OPÇÕES:
-A) Use Edit com um `old_string` extremamente longo...
-B) Use o parâmetro `replace_all` do Edit...
-C) Use Bash para adicionar a definição da função...
-D) Use Read para carregar o arquivo, adicionar...
-
-─────────────────────────────────────────────────────────────
-
-ANÁLISE TÉCNICA (TECH LEAD):
-Explicação: Esta pergunta testa...
-Por que D é correta: A abordagem Read-Modify-Write...
-Por que A/B/C estão erradas: A) O `old_string`... B)...
-Dica importante: O padrão Read-Modify-Write é...
-
-─────────────────────────────────────────────────────────────
-
-EXPLICAÇÃO ACESSÍVEL (CRIANÇAS):
-Explicação: Imagina que você quer inserir algo no meio...
-Por que D é correta: Porque você carrega tudo...
-Por que A/B/C estão erradas: A) Procurar é difícil...
-Dica importante: Quando precisar mudar algo...
-
-─────────────────────────────────────────────────────────────
-
-RESPOSTA CORRETA:
-✓ D - Use Read to load the file, add the function at 
-      the appropriate location, then Write the updated file
-```
-
-**Página Final:**
-```
-═══════════════════════════════════════════════════════════════
-FIM DO DECK
-
-Cards neste deck: [TOTAL REAL ENCONTRADO]
-Gerado em: dd/mm/yyyy hh:mm:ss
-
-Estrutura de cada card:
-• PERGUNTA (ENGLISH)
-• OPÇÕES (A, B, C, D)
-• PERGUNTA (PORTUGUÊS)
-• ANÁLISE TÉCNICA (TECH LEAD)
-• EXPLICAÇÃO ACESSÍVEL (CRIANÇAS)
-• RESPOSTA CORRETA
-
-Para uso em Spaced Repetition Systems (SRS)
-═══════════════════════════════════════════════════════════════
-```
+Não improvise o layout e não reproduza a estrutura aqui: siga o template. Se o layout precisar
+mudar, edite `templates/pdf-report-template.md`, nunca este agente.
 
 ### Passo 4: Gerar PDF com Nome Timestamp
 
@@ -171,7 +76,7 @@ Para uso em Spaced Repetition Systems (SRS)
    - Exemplo: `Report 15-08-2026 14:23:45.pdf`
 3. **Localização:** `/Users/fabiopereira/Desktop/desafio-formularios/outputs/`
 4. **Use biblioteca PDF** (ex: reportlab, fpdf2, ou pandoc para markdown→PDF)
-5. **Escreva o PDF** com a estrutura completa
+5. **Escreva o PDF** exatamente com a estrutura de `templates/pdf-report-template.md`
 
 ### Passo 5: Responder com Status
 

@@ -263,6 +263,11 @@ git log --oneline -10
   - `enriched-sections-template.md` — Canonical layout for the **enricher** stages (TECH,
     KIDS, CORRECT ANSWER), including the "exactly 3 wrong options" rule and the letter→emoji
     map; both `card-enricher-tech` and `card-enricher-kids` must read this before writing
+  - `pdf-report-template.md` — **Single source of truth for the PDF layout** (cover, TOC, card
+    page, final page, section→block map, formatting standards, and the derived-deck-size rule).
+    Both PDF paths must read it before generating: the `gerador-de-reports` agent (pipeline
+    Phase 4) and the `/exporta-cards-enriquecidos-para-pdf` skill. Change the layout here, never
+    in the agent or the skill
 - **`.claude/skills/gerar-cards-enriquecidos-do-forms/README.md`** — Quick start guide
 - **`.claude/skills/gerar-cards-enriquecidos-do-forms/SKILL.md`** — Detailed technical workflow
 
