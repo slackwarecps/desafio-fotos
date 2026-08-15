@@ -2,7 +2,7 @@
 name: gerador-de-reports
 description: Generates PDF report from enriched flashcards with deck-style formatting, table of contents, and pagination.
 model: haiku
-color: purple
+color: yellow
 ---
 
 # Gerador de Reports (PDF Agent)

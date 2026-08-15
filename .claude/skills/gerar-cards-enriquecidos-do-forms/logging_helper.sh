@@ -81,43 +81,43 @@ log_agent_dispatch() {
     local card_num="$2"
 
     local timestamp=$(date "+%H:%M:%S")
-    local rótulo="Parser"
+    local rotulo="Parser"
 
     case "$agent" in
-        "card-parser") rótulo="Parser" ;;
-        "card-translator") rótulo="Translator" ;;
-        "card-enricher-tech") rótulo="Tech Enricher" ;;
-        "card-enricher-kids") rótulo="Kids Enricher" ;;
-        "gerador-de-reports") rótulo="Report Generator" ;;
+        "card-parser") rotulo="Parser" ;;
+        "card-translator") rotulo="Translator" ;;
+        "card-enricher-tech") rotulo="Tech Enricher" ;;
+        "card-enricher-kids") rotulo="Kids Enricher" ;;
+        "gerador-de-reports") rotulo="Report Generator" ;;
     esac
 
-    echo "$timestamp $rótulo $card_num iniciado..."
-    echo "$timestamp $rótulo $card_num iniciado..." >> "$LOG_FILE"
+    echo "$timestamp $rotulo $card_num iniciado..."
+    echo "$timestamp $rotulo $card_num iniciado..." >> "$LOG_FILE"
 }
 
 # Função para agent completion
 log_agent_complete() {
     local agent="$1"
     local card_num="$2"
-    local status="${3:-OK}"
+    local card_status="${3:-OK}"
 
     local timestamp=$(date "+%H:%M:%S")
-    local rótulo="Parser"
+    local rotulo="Parser"
 
     case "$agent" in
-        "card-parser") rótulo="Parser" ;;
-        "card-translator") rótulo="Translator" ;;
-        "card-enricher-tech") rótulo="Tech Enricher" ;;
-        "card-enricher-kids") rótulo="Kids Enricher" ;;
-        "gerador-de-reports") rótulo="Report Generator" ;;
+        "card-parser") rotulo="Parser" ;;
+        "card-translator") rotulo="Translator" ;;
+        "card-enricher-tech") rotulo="Tech Enricher" ;;
+        "card-enricher-kids") rotulo="Kids Enricher" ;;
+        "gerador-de-reports") rotulo="Report Generator" ;;
     esac
 
-    if [[ "$status" == "OK" ]]; then
-        echo "$timestamp $rótulo $card_num completo ✓"
-        echo "$timestamp $rótulo $card_num completo ✓" >> "$LOG_FILE"
+    if [[ "$card_status" == "OK" ]]; then
+        echo "$timestamp $rotulo $card_num completo ✓"
+        echo "$timestamp $rotulo $card_num completo ✓" >> "$LOG_FILE"
     else
-        echo "$timestamp $rótulo $card_num FALHOU ❌ — $status"
-        echo "$timestamp $rótulo $card_num FALHOU ❌ — $status" >> "$LOG_FILE"
+        echo "$timestamp $rotulo $card_num FALHOU ❌ — $card_status"
+        echo "$timestamp $rotulo $card_num FALHOU ❌ — $card_status" >> "$LOG_FILE"
     fi
 }
 
