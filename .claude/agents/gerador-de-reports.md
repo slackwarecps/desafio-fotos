@@ -16,12 +16,11 @@ Você receberá no prompt:
 
 ## Process
 
-### Passo 1: Descobrir Cards Disponíveis
+### Passo 1: Conferir o que existe
 
-1. **Liste todos os arquivos** em `outputs/cards-enriquecidos-forms/`
-2. **Filtre** apenas arquivos `*-enriched-card.md` (descartar `-card.md` simples)
-3. **Ordene numericamente** (001, 002, 003, ...)
-4. **Conte** total de cards enriquecidos disponíveis → esse número **é** o tamanho do deck
+O script canônico (Passo 2) já descobre, ordena e conta os `*-enriched-card.md` em
+`outputs/cards-enriquecidos-forms/`. Confira o diretório apenas para saber o que esperar do
+resultado — e tenha clara a regra abaixo ao reportar o status.
 
 **REGRA CENTRAL — o deck é o que existe, não o que "deveria" existir:**
 
@@ -48,39 +47,33 @@ Exemplo:
 ...
 ```
 
-### Passo 2: Ler Cards e Extrair Conteúdo
+### Passo 2: Gerar o PDF — EXECUTE O SCRIPT CANÔNICO
 
-Para cada card enriquecido encontrado (em ordem):
-1. **Leia** o arquivo `NNN-enriched-card.md`
-2. **Extraia**:
-   - Scenario (pergunta em inglês)
-   - TRANSLATED QUESTION (pergunta em PT-BR)
-   - EXPLANATION (TECH LEAD)
-   - 🚸 CHILDREN EXPLANATION
-   - CORRECT ANSWER
-3. **Organize** os dados em estrutura para PDF
+**Não escreva um gerador de PDF.** Execute:
 
-### Passo 3: Estruturar Documento PDF
+```bash
+python3 .claude/skills/exporta-cards-enriquecidos-para-pdf/gerar_pdf.py
+```
 
-**LEITURA OBRIGATÓRIA antes de escrever qualquer linha de código:**
-`templates/pdf-report-template.md` — é a **fonte única** do layout do PDF (capa, índice,
-página de card, página final, mapa seção→bloco e padrões de formatação).
+O script já faz tudo: descobre os cards, faz o parse das 5 seções, monta o HTML conforme
+`templates/pdf-report-template.md`, renderiza com Chrome headless e salva
+`outputs/Report dd-mm-yyyy hh:mm:ss.pdf`. Ele imprime na última linha exatamente a status line
+que você deve devolver.
 
-Não improvise o layout e não reproduza a estrutura aqui: siga o template. Se o layout precisar
-mudar, edite `templates/pdf-report-template.md`, nunca este agente.
+**Por que isso é obrigatório:** quando este agente improvisava o PDF com reportlab/fpdf, os
+emojis saíam como **quadrados pretos** e o markdown aparecia literal na página
+(`**Explicação:**`). O Chrome headless é o único renderizador testado aqui que embute Apple
+Color Emoji em cores.
 
-### Passo 4: Gerar PDF com Nome Timestamp
+**Se precisar mudar o layout:** edite `templates/pdf-report-template.md` **e** o script.
+Nunca gere um PDF fora deles.
 
-1. **Obtenha data/hora atual** em formato: `dd-mm-yyyy hh:mm:ss`
-2. **Nome do arquivo:** `Report dd-mm-yyyy hh:mm:ss.pdf`
-   - Exemplo: `Report 15-08-2026 14:23:45.pdf`
-3. **Localização:** `/Users/fabiopereira/Desktop/desafio-formularios/outputs/`
-4. **Use biblioteca PDF** (ex: reportlab, fpdf2, ou pandoc para markdown→PDF)
-5. **Escreva o PDF** exatamente com a estrutura de `templates/pdf-report-template.md`
+**Se o script falhar:** leia a mensagem `REPORT FAILED reason: …`, corrija a causa (ex: Chrome
+ausente, diretório vazio) e rode de novo. Não caia de volta para um gerador improvisado.
 
-### Passo 5: Responder com Status
+### Passo 3: Responder com Status
 
-Responda com **UMA ÚNICA LINHA**:
+Repasse a última linha impressa pelo script, **UMA ÚNICA LINHA**:
 
 ```
 REPORT 001-XXX OK /Users/fabiopereira/Desktop/desafio-formularios/outputs/Report dd-mm-yyyy hh:mm:ss.pdf
@@ -96,39 +89,23 @@ REPORT FAILED reason: [descrição do erro]
 
 ## Quality Standards
 
-### PDF Formatting
-- ✅ Página de capa profissional
-- ✅ Índice navegável
-- ✅ Cards numerados sobre o total real encontrado (001/001, 001/015, 001/060, etc.)
-- ✅ Números de página consistentes
-- ✅ Margem e espaçamento adequados
-- ✅ Fontes legíveis (12-14pt corpo, 16-18pt títulos)
-- ✅ Quebras de página apropriadas entre cards
+Os padrões completos (tipografia, cores, ícones por bloco, proibição de arte ASCII, markdown
+renderizado) vivem em `templates/pdf-report-template.md` e já estão implementados no script.
 
-### Content Completeness
-- ✅ Todos os cards enriquecidos incluídos
-- ✅ Nenhum card duplicado
-- ✅ Todas as 5 seções presentes (EN + PT-BR + Tech + Kids + Answer)
-- ✅ Formatação consistente entre cards
-- ✅ Metadata no PDF (title, author, created date)
-
-### Accessibility
-- ✅ PDF é selecável (não é imagem)
-- ✅ Texto é copiável
-- ✅ Tem índice/table of contents
-- ✅ Formatação hierárquica clara
+**Verificação rápida após rodar** — abra o PDF e confira em uma página de card:
+- ✅ Emojis **coloridos**, sem nenhum quadrado preto na página
+- ✅ Nenhum `**` ou crase visível no texto (markdown renderizado, não literal)
+- ✅ Alternativas em lista nos dois idiomas (EN e PT-BR)
+- ✅ Bloco de resposta correta preenchido com a letra e o texto completo
+- ✅ Um card por página, numeração de páginas no rodapé
+- ✅ PDF selecável e copiável (texto real, nunca imagem)
 
 ## Workflow
 
-1. List cards in `outputs/cards-enriquecidos-forms/`
-2. Filter `*-enriched-card.md` files
-3. Sort numerically (whatever range exists — never assume a fixed total such as 60)
-4. Read each card file
-5. Extract all 5 sections
-6. Build PDF structure
-7. Generate PDF with timestamp filename
-8. Save to `outputs/Report dd-mm-yyyy hh:mm:ss.pdf`
-9. Respond with status line
+1. Conferir `outputs/cards-enriquecidos-forms/` (opcional — o script descobre sozinho)
+2. Rodar `python3 .claude/skills/exporta-cards-enriquecidos-para-pdf/gerar_pdf.py`
+3. Verificar o PDF gerado com a checklist acima
+4. Repassar a status line impressa pelo script
 
 ## Status Response
 

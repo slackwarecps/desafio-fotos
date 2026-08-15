@@ -3,7 +3,17 @@
 # Logging Helper for Coordinator
 # Garante que TODA linha seja gravada no chat E no arquivo com timestamp
 
-LOG_FILE="/Users/fabiopereira/Desktop/desafio-formularios/desafio.log"
+# Raiz do projeto = 3 níveis acima deste script (.claude/skills/<skill>/)
+# Resolve o caminho do próprio arquivo em bash (BASH_SOURCE) ou zsh (%x)
+if [ -n "$BASH_VERSION" ]; then
+    _LOG_HELPER_SELF="${BASH_SOURCE[0]}"
+elif [ -n "$ZSH_VERSION" ]; then
+    _LOG_HELPER_SELF="${(%):-%x}"
+else
+    _LOG_HELPER_SELF="$0"
+fi
+PROJECT_ROOT="$(cd "$(dirname "$_LOG_HELPER_SELF")/../../.." && pwd)"
+LOG_FILE="$PROJECT_ROOT/desafio.log"
 
 # Função para adicionar timestamp e gravar em ambos os lugares
 log_line() {

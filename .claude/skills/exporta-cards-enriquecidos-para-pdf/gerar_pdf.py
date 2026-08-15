@@ -42,8 +42,9 @@ def parse_card(path: Path) -> dict:
     text = path.read_text(encoding="utf-8")
 
     def section(header: str) -> str:
-        # Captura da linha "### HEADER" até o próximo "---" isolado ou próximo "###"
-        pattern = rf"^###\s*{re.escape(header)}\s*\n(.*?)(?=^---\s*$|^###\s)"
+        # Da linha "### HEADER" até o próximo "---" isolado, o próximo "###" ou o fim do arquivo
+        # (\Z é essencial: CORRECT ANSWER é a última seção e não tem delimitador depois)
+        pattern = rf"^###\s*{re.escape(header)}\s*\n(.*?)(?=^---\s*$|^###\s|\Z)"
         m = re.search(pattern, text, re.S | re.M)
         return m.group(1).strip() if m else ""
 
@@ -94,9 +95,17 @@ def md_block(s: str) -> str:
         if m:
             out.append(f'<p class="label">{md_inline(m.group(1))}:</p>')
             para = m.group(2)
-        lines = [md_inline(l) for l in para.strip().split("\n") if l.strip()]
+        lines = [l for l in para.strip().split("\n") if l.strip()]
+        # Bloco de alternativas ("A) ...", "B) ...") vira lista, como no bloco em inglês
+        if lines and all(re.match(r"^[A-D]\)\s", l) for l in lines):
+            items = "".join(
+                f"<li><span class='k'>{l[:2]}</span> {md_inline(l[2:].strip())}</li>"
+                for l in lines
+            )
+            out.append(f"<ul class='options'>{items}</ul>")
+            continue
         if lines:
-            out.append("<p>" + "<br>".join(lines) + "</p>")
+            out.append("<p>" + "<br>".join(md_inline(l) for l in lines) + "</p>")
     return "\n".join(out)
 
 
@@ -138,6 +147,7 @@ strong { color: #0b0b0c; }
 .card-head .of { font-size: 10pt; opacity: .85; }
 
 .block { margin: 0 0 6mm; }
+.block.break-before { page-break-before: always; break-before: page; padding-top: 2mm; }
 .block h3 { display: flex; align-items: center; gap: 2.5mm;
             font-size: 12pt; color: #1a4f9c; margin: 0 0 2.5mm;
             padding-bottom: 1.5mm; border-bottom: 2px solid #d6e2f2; }
@@ -191,7 +201,9 @@ def build_html(cards: list, generated: str) -> str:
             f"<span class='of'>arquivo {c['number']}</span></div>"
         )
         for key, ico, label in BLOCKS:
-            parts.append(f"<div class='block'><h3><span class='ico'>{ico}</span>{label}</h3>")
+            # A pergunta em PT-BR sempre abre uma página nova, separada da versão em inglês
+            css = "block break-before" if key == "pt" else "block"
+            parts.append(f"<div class='{css}'><h3><span class='ico'>{ico}</span>{label}</h3>")
             if key == "en":
                 parts.append(f"<p>{md_inline(c['scenario'])}</p><ul class='options'>")
                 for letter, txt in c["options_en"]:

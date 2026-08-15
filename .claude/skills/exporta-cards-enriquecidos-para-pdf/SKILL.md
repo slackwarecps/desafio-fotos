@@ -13,6 +13,19 @@ Consolida todos os cards enriquecidos (NNN-enriched-card.md) em um único arquiv
 /exporta-cards-enriquecidos-para-pdf
 ```
 
+## Implementação Canônica (use esta, não improvise)
+
+```bash
+python3 .claude/skills/exporta-cards-enriquecidos-para-pdf/gerar_pdf.py
+```
+
+`gerar_pdf.py` faz o fluxo completo — descobre os cards, faz o parse das 5 seções, monta o HTML
+e renderiza com **Chrome headless** (único caminho que produz emojis coloridos em vez de
+quadrados pretos). Imprime na última linha `REPORT <primeiro>-<último> OK <caminho>`.
+
+O `exporta.py` legado gera o Markdown consolidado e é mantido para esse uso; para PDF, o
+caminho canônico é `gerar_pdf.py`.
+
 ## Template Canônico (leitura obrigatória)
 
 O layout do PDF é definido **exclusivamente** por:

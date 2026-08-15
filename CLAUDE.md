@@ -11,8 +11,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 The primary workflow is generating enriched flashcards from a Google Forms export:
 
 ```bash
-/gerar-cards-enriquecidos-do-forms          # Process all pending questions
-/gerar-cards-enriquecidos-do-forms 3        # Process only next 3 questions
+/gerar-cards-enriquecidos-do-forms              # Process all pending questions
+/gerar-cards-enriquecidos-do-forms 5            # Process only question 5
+/gerar-cards-enriquecidos-do-forms 10 20        # Process questions 10 to 20
 ```
 
 Expected flow:
@@ -37,9 +38,15 @@ Expected flow:
 
 For questions stored in `formularios/formulario.tsv` (Google Forms export), invoke the skill:
 ```bash
-/gerar-cards-enriquecidos-do-forms           # Process all pending questions
-/gerar-cards-enriquecidos-do-forms 3         # Process only next 3 new questions
+/gerar-cards-enriquecidos-do-forms              # Process all pending questions
+/gerar-cards-enriquecidos-do-forms 5            # Process only question 5
+/gerar-cards-enriquecidos-do-forms 10 20        # Process questions 10 to 20
 ```
+
+**Modo de operação:**
+- **Sem argumentos:** Processa todas as perguntas ainda pendentes (que não têm ambos card simples + enriquecido)
+- **Um número:** Processa apenas essa pergunta específica (ex: 5 = pergunta 005)
+- **Dois números:** Processa intervalo de perguntas (ex: 10 20 = perguntas de 10 a 20, inclusive)
 
 This skill uses a **multiagent pipeline with 4 specialized agents** to automate card generation:
 - **Coordinator** orchestrates 4 subagents in parallel pipeline (max 5 simultaneous agents)
@@ -49,7 +56,7 @@ This skill uses a **multiagent pipeline with 4 specialized agents** to automate 
   4. **card-enricher-kids** — Accessible explanation, fills `🚸 CHILDREN EXPLANATION` section
 - Each question passes through 4 stages sequentially, but **different questions run in parallel**
 - Output stored separately in `outputs/cards-enriquecidos-forms/` to avoid numbering conflicts
-- Supports idempotent processing (AND rule: skips only if both simple and enriched files exist) and configurable batch sizes
+- Supports idempotent processing (AND rule: skips only if both simple and enriched files exist) and flexible scoping (all, single question, or range)
 
 **Mandatory 5th Agent (always runs at the end):**
 5. **gerador-de-reports** — Dispatched automatically by the coordinator as soon as the last `card-enricher-kids` of the run finishes, on every execution (including partial batches). Generates a PDF report from all enriched cards in the output directory with deck-style formatting, TOC, and timestamp filename.
@@ -266,8 +273,12 @@ git log --oneline -10
   - `pdf-report-template.md` — **Single source of truth for the PDF layout** (cover, TOC, card
     page, final page, section→block map, formatting standards, and the derived-deck-size rule).
     Both PDF paths must read it before generating: the `gerador-de-reports` agent (pipeline
-    Phase 4) and the `/exporta-cards-enriquecidos-para-pdf` skill. Change the layout here, never
-    in the agent or the skill
+    Phase 4) and the `/exporta-cards-enriquecidos-para-pdf` skill. Change the layout here **and**
+    in the script below — never generate a PDF outside them
+- **`.claude/skills/exporta-cards-enriquecidos-para-pdf/gerar_pdf.py`** — canonical PDF
+  generator implementing that template. Renders HTML and converts with **Chrome headless**, the
+  only renderer tested here that embeds Apple Color Emoji in color; reportlab/fpdf/weasyprint
+  all produce black squares (tofu) for emoji. Never hand-roll a PDF generator: run this script
 - **`.claude/skills/gerar-cards-enriquecidos-do-forms/README.md`** — Quick start guide
 - **`.claude/skills/gerar-cards-enriquecidos-do-forms/SKILL.md`** — Detailed technical workflow
 

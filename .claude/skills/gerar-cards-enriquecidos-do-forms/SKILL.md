@@ -39,8 +39,23 @@ Cada linha passa por 4 estágios em sequência, mas linhas diferentes rodam em p
 - Linha N+1 do TSV → `NNN-card.md` + `NNN-enriched-card.md` (NNN = N com zero-padding de 3 dígitos)
 
 ### Escopo (qual pergunta processar)
-- **Sem argumento:** `/gerar-cards-enriquecidos-do-forms` → processa **todas as perguntas ainda pendentes**
-- **Com número:** `/gerar-cards-enriquecidos-do-forms N` → processa as próximas **N perguntas pendentes**
+
+**3 modos possíveis:**
+
+1. **Todas as perguntas (sem argumento)**
+   - Comando: `/gerar-cards-enriquecidos-do-forms`
+   - Processa **todas as perguntas ainda pendentes** (que não têm ambos card simples + enriquecido)
+
+2. **Pergunta específica (um número)**
+   - Comando: `/gerar-cards-enriquecidos-do-forms 5`
+   - Processa **apenas a pergunta número 5** (NNN=005)
+   - Independente de já existir ou não
+
+3. **Intervalo de perguntas (dois números)**
+   - Comando: `/gerar-cards-enriquecidos-do-forms 10 20`
+   - Processa **perguntas de 10 a 20** (inclusive ambos)
+   - Exemplo: `/gerar-cards-enriquecidos-do-forms 1 10` (1 a 10)
+   - Exemplo: `/gerar-cards-enriquecidos-do-forms 15 20` (15 a 20)
 
 ---
 
