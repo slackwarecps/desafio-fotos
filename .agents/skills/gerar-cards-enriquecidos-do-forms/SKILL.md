@@ -1,18 +1,18 @@
 ---
 name: gerar-cards-enriquecidos-do-forms
-description: Gera cartões enriquecidos e didáticos para flashcards SRS a partir das perguntas em formulario.tsv, usando orquestração paralela de 4 agentes especializados (parser, translator, tech-enricher, kids-enricher) com teto de 5 agentes simultâneos.
+description: Gera cartões enriquecidos e didáticos para flashcards SRS a partir das perguntas em formulario.tsv, usando orquestração paralela de 5 agentes especializados (parser, translator, tech-enricher, kids-enricher, gerador-de-reports) com teto de 5 agentes simultâneos e gerar um pdf ao final de tudo.
 ---
 
 ## COORDENADOR — INSTRUÇÕES DE EXECUÇÃO
 
-Você é o coordenador desta skill. Sua missão é orquestrar 4 subagentes especializados para transformar perguntas TSV em flashcards enriquecidos. 
+Você é o coordenador desta skill. Sua missão é orquestrar 5 subagentes especializados para transformar perguntas TSV em flashcards enriquecidos e depois em um report em PDF.
 
 ### Fase 1: Parsear Argumentos e Validar Modo
 
 Analise os argumentos passados:
 - **Nenhum argumento**: Modo 1 (processar TODAS as perguntas pendentes)
 - **Um número** (ex: `5`): Modo 2 (processar APENAS pergunta 5 = 005-card.md + 005-enriched-card.md)
-- **Dois números** (ex: `10 20`): Modo 3 (processar intervalo pergunta 10 até 20, inclusive ambas)
+- **Dois números** (ex: `10 20`, `de 10 a 20`): Modo 3 (processar intervalo pergunta 10 até 20, inclusive ambas)
 
 Se argumentos forem inválidos (texto ao invés de número, intervalo ilógico, etc), rejeite com mensagem clara.
 
