@@ -1,0 +1,8 @@
+Scenario: After implementing tool use with strict schema definitions, JSON syntax errors are eliminated, but 5% of extractions still have valid JSON with empty arrays or null values for required fields like citations and methodology. Spot-checking reveals that source documents contain this information, but in varied formats—inline citations vs. bibliographies, methodology sections vs. details embedded in introductions. What's the most effective way to address these failures?
+
+---
+
+[ ] A - Implement retry logic that re-sends requests when validation detects empty required fields.
+[ ] B - Build a regex-based post-processing layer that scans source documents for citation patterns and methodology keywords, populating empty fields when the model fails to extract.
+[ ] C - Modify your schema to make citations and methodology optional, and flag incomplete records for manual review rather than failing validation.
+[ ] D - Add few-shot examples demonstrating extractions from documents with varied structures—showing how to identify citations in different formats and locate methodology details across section types.

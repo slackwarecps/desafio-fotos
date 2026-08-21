@@ -1,8 +1,0 @@
-Scenario: A customer raises three separate issues during one session: a refund inquiry (turns 1-15), a subscription question (turns 16-30), and a payment method update (turns 31-45). At turn 48, the customer asks "What happened with my refund?" The conversation is approaching context limits. What strategy best maintains the agent's ability to address all issues throughout the session?
-
----
-
-[ ] A - Extract and persist structured issue data (order IDs, amounts, statuses) into a separate context layer.B.Rely on MCP tools to re-fetch relevant information on demand when the customer references earlier issues.C.Summarize earlier turns into a narrative description, preserving full message history only for the active issue.D.Implement sliding window context that retains the most recent 30 turns.
-[ ] B - Rely on MCP tools to re-fetch relevant information on demand when the customer references earlier issues.C.Summarize earlier turns into a narrative description, preserving full message history only for the active issue.D.Implement sliding window context that retains the most recent 30 turns.
-[ ] C - Summarize earlier turns into a narrative description, preserving full message history only for the active issue.D.Implement sliding window context that retains the most recent 30 turns.
-[ ] D - Implement sliding window context that retains the most recent 30 turns.

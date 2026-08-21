@@ -1,8 +1,0 @@
-Scenario: Your schema includes a skills: string[] field. Production monitoring reveals three consistency issues: (1) compound phrases like "Python and SQL" are sometimes kept as one entry, sometimes split; (2) implied but unstated skills occasionally appear in extractions; (3) similar documents produce wildly different array lengths (5-10 vs 40+ entries). Your prompt currently says "Extract all skills mentioned." What's the most effective improvement?
-
----
-
-[ ] A - Add few-shot examples demonstrating compound phrase handling, explicit mention criteria, and appropriate entry granularity.B.Add constraints: "Extract 10-20 skills maximum, one skill per entry, only explicitly named skills."C.Add post-extraction normalization that maps skills to a canonical taxonomy and deduplicates similar entries.D.Enrich the schema to {skill: string, confidence: float, `source_quote`: string}[] to capture extraction metadata.
-[ ] B - Add constraints: "Extract 10-20 skills maximum, one skill per entry, only explicitly named skills."C.Add post-extraction normalization that maps skills to a canonical taxonomy and deduplicates similar entries.D.Enrich the schema to {skill: string, confidence: float, `source_quote`: string}[] to capture extraction metadata.
-[ ] C - Add post-extraction normalization that maps skills to a canonical taxonomy and deduplicates similar entries.D.Enrich the schema to {skill: string, confidence: float, `source_quote`: string}[] to capture extraction metadata.
-[ ] D - Enrich the schema to {skill: string, confidence: float, `source_quote`: string}[] to capture extraction metadata.

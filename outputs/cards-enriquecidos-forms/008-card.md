@@ -1,8 +1,0 @@
-Scenario: Your agent has spent 25 minutes exploring a game engine's rendering subsystem—reading shader code, buffer management, and frame synchronization logic. An engineer now asks it to understand how the physics engine integrates with rendering for collision debug overlays. You notice recent responses reference "typical rendering patterns" rather than the specific VulkanPipeline and FrameGraph classes it discovered earlier. What's the most effective approach?
-
----
-
-[ ] A - Spawn a sub-agent to explore physics independently, then manually synthesize its findings with the rendering knowledge accumulated in the main conversation.B.Continue in the current context with more targeted prompts referencing the specific classes by name.C.Summarize key rendering findings, then spawn a sub-agent for physics exploration with that summary in its initial context.D.Use /clear to reset context completely, then start fresh with physics exploration using file paths from the project's CLAUDE.md.
-[ ] B - Continue in the current context with more targeted prompts referencing the specific classes by name.C.Summarize key rendering findings, then spawn a sub-agent for physics exploration with that summary in its initial context.D.Use /clear to reset context completely, then start fresh with physics exploration using file paths from the project's CLAUDE.md.
-[ ] C - Summarize key rendering findings, then spawn a sub-agent for physics exploration with that summary in its initial context.D.Use /clear to reset context completely, then start fresh with physics exploration using file paths from the project's CLAUDE.md.
-[ ] D - Use /clear to reset context completely, then start fresh with physics exploration using file paths from the project's CLAUDE.md.

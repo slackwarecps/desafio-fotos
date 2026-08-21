@@ -1,0 +1,8 @@
+Scenario: Your agent has called `lookup_order` multiple times while investigating a customer's return requests. Each response includes 40+ fields (items, shipping details, payment info, status history). Tool outputs now represent the majority of the conversation's context. The customer mentions two more orders they want to discuss. What's the most effective approach before making additional lookups?
+
+---
+
+[ ] A - Extract only return-relevant fields (items, purchase date, return window, status) from each existing order response, removing verbose details
+[ ] B - Have the model generate a natural language summary of each order's key details, replacing structured responses with prose descriptions
+[ ] C - Move all tool responses to a vector database with semantic indexing, retrieving relevant portions as the conversation continues
+[ ] D - Proceed with additional lookups without modifying the existing tool output context

@@ -1,0 +1,8 @@
+Scenario: An engineer asks your agent to identify untested code paths in a legacy payment processing module spanning 45 files. After reading the first 8 source files, the agent's responses are becoming noticeably less accurate—it's forgetting previously discussed code patterns and hasn't yet located all test files or traced critical payment flows. What's the most effective approach to complete this investigation?
+
+---
+
+[ ] A - Document all current findings in a summary report, clear context completely, then use that report as the sole reference for continuing the investigation.
+[ ] B - Spawn subagents to investigate specific questions (e.g., "find all test files for payment processing", "trace refund flow dependencies") while the main agent coordinates findings and preserves high-level understanding.
+[ ] C - Clear context with /clear, then selectively re-read only the most critical files discovered so far, writing key findings to a scratchpad file that persists between context resets.
+[ ] D - Switch to using Grep to search for specific function names instead of reading full files, reducing the content loaded into context for remaining exploration.
